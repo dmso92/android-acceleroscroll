@@ -14,7 +14,7 @@ public class Ball extends SurfaceView implements SurfaceHolder.Callback{
     private BackgroundThread _thread;
     private SpeedManager speedManager;
  
-    public Ball(Context context, float r) {
+    public Ball(Context context, SpeedManager sp, float r) {
         super(context);
         getHolder().addCallback(this);
         mPaint.setColor(0xFFFF0000);
@@ -25,7 +25,7 @@ public class Ball extends SurfaceView implements SurfaceHolder.Callback{
         this.y = height/2;
         this.r = r;
         _thread = new BackgroundThread(this.getHolder(), this);
-        speedManager = new SpeedManager(context);
+        this.speedManager = sp;
         MySensorManager.startListening(speedManager);
     }
     
@@ -56,6 +56,7 @@ public class Ball extends SurfaceView implements SurfaceHolder.Callback{
                     c = _surfaceHolder.lockCanvas(null);
                     synchronized (_surfaceHolder) {
                         _ball.onDraw(c);
+                    	//_ball.postInvalidate();
                     }
                 } finally {
                     // do this in a finally so that if an exception is thrown
@@ -86,9 +87,9 @@ public class Ball extends SurfaceView implements SurfaceHolder.Callback{
     	}
     	int height = this.getHeight();
     	int width = this.getWidth();
-        this.y += speedManager.speed[1]*100;
-        this.x += speedManager.speed[0]*100;
-        this.r += speedManager.speed[2]*50;
+        this.y += speedManager.movement[1]*100; //1cm ~ 100 pixel?
+        this.x += speedManager.movement[0]*100;
+        this.r += speedManager.movement[2]*10;
         if(this.y > height){
         	this.y  = 0.0f;
         } else if(this.y < 0){

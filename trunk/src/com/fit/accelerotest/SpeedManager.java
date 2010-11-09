@@ -6,6 +6,7 @@ import android.opengl.Matrix;
 
 public class SpeedManager implements MySensorListener{
 	
+	public float[] movement = new float[3];
 	public float[] speed = new float[3];
 	public float[] magSensorValues = new float[3];
 	public float[] orientationAngles = new float[3];
@@ -13,8 +14,7 @@ public class SpeedManager implements MySensorListener{
 	public float[] accelerationValues = new float[3];
 	public float[] infoArray = new float[3];
 	private boolean on_start = true;
-	private final float EARTH_GRAVITY = 9.81f;
-	static final float THRESHOLD = 0.2f;
+	static final float THRESHOLD = 0.5f;
 	static final int HISTORY_SIZE = 30;
 	public float[] accelerationHistory = new float[90];
 	public int historyIndex = 0;
@@ -30,6 +30,13 @@ public class SpeedManager implements MySensorListener{
 			this.speed[i] = 0.0f;
 			this.magSensorValues[i] = 0.0f;
 			this.orientationAngles[i] = 0.0f;
+		}
+	}
+	
+	public void getMovement(float[] outMovement){
+		for(int i = 0; i<3; i++){
+			outMovement[i] = this.movement[i];
+			this.movement[i] = 0.0f;
 		}
 	}
 	
@@ -96,15 +103,14 @@ public class SpeedManager implements MySensorListener{
 			//get the invers rotation matrix to get back the accelerometer values to the phone coordinate system
 			Matrix.rotateM(phoneRotation, 0, -orientationAngles[1]/3.14f*180.0f, 1.0f, 0.0f, 0.0f);
 			Matrix.rotateM(phoneRotation, 0, orientationAngles[2]/3.14f*180.0f, 0.0f, 1.0f, 0.0f);
-			float movement[] = new float[4];
+			float aclMovement[] = new float[4];
 			for(int i = 0; i<3; i++){
-				movement[i] = currentAcceleroValues[i] - avgValues[i];
+				aclMovement[i] = currentAcceleroValues[i] - avgValues[i];
 			}
-			movement[3] = 1.0f;
-			Matrix.multiplyMV(phoneCoordAcceleration, 0, phoneRotation, 0, movement, 0);
+			aclMovement[3] = 1.0f;
+			Matrix.multiplyMV(phoneCoordAcceleration, 0, phoneRotation, 0, aclMovement, 0);
 
 			for (int i = 0; i<3; i++){
-				//multiply with gravity acceleration to get the result in m/s
 				//timediff is in nanoseconds
 				this.speed[i] += timeDiff*phoneCoordAcceleration[i]/10e9f;
 			}
@@ -119,6 +125,10 @@ public class SpeedManager implements MySensorListener{
 				this.speed[i] *= (1.0f-timeDiff/10e7f);
 			}
 			
+		}
+		
+		for(int i = 0; i<3; i++) {
+			this.movement[i] = timeDiff*this.speed[i]/10e7f; //timediff is in nanoseconds 10e9 * 100 to get the speed in cm/s = 10e7
 		}
 
 		//store the position
