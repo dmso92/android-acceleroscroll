@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, AcceleroScrollDemo!</string>
+    <string name="app_name">AcceleroScroll</string>
+<string name="background_service_label">AcceleroScroll Service</string>
+<string name="background_service_started">AcceleroScroll service started</string>
+<string name="background_service_stopped">AcceleroScroll Service stopped</string>
+<string name="background_service_connected">Successfully connected to service.</string>
+<string name="background_service_disconnected">Disconnected from service.</string>
+</resources>
