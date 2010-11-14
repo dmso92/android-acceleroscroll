@@ -11,14 +11,18 @@ import android.hardware.SensorManager;
 public class AcceleroSensorManager {
 
 	private static Sensor sensor;
-    private static Sensor magSensor;
     private static SensorManager sensorManager;
     // you could use an OrientationListener array instead
     // if you plans to use more than one listener
     private static AcceleroSensorListener listener;
+    private static int sensorDelay = SensorManager.SENSOR_DELAY_UI;
     
  
-    /** indicates whether or not Accelerometer Sensor is supported */
+    public static void setSensorDelay(int sensorDelay) {
+		AcceleroSensorManager.sensorDelay = sensorDelay;
+	}
+
+	/** indicates whether or not Accelerometer Sensor is supported */
     private static Boolean supported;
     /** indicates whether or not Accelerometer Sensor is running */
     private static boolean running = false;
@@ -38,7 +42,6 @@ public class AcceleroSensorManager {
         try {
             if (sensorManager != null && sensorEventListener != null) {
                 sensorManager.unregisterListener(sensorEventListener);
-                sensorManager.unregisterListener(magSensorEventListener);
             }
         } catch (Exception e) {}
     }
@@ -51,8 +54,7 @@ public class AcceleroSensorManager {
             if (context != null) {
                 sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
                 List<Sensor> sensors = sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER);
-                List<Sensor> sensors2 = sensorManager.getSensorList(Sensor.TYPE_MAGNETIC_FIELD);
-                supported = new Boolean(sensors.size() > 0 && sensors2.size() > 0);
+                supported = new Boolean(sensors.size() > 0);
             } else {
                 supported = Boolean.FALSE;
             }
@@ -70,28 +72,15 @@ public class AcceleroSensorManager {
             AcceleroSensorListener accelerometerListener) {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         List<Sensor> sensors = sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER);
-        List<Sensor> sensors2 = sensorManager.getSensorList(Sensor.TYPE_MAGNETIC_FIELD);
-        if (sensors.size() > 0 && sensors2.size() > 0) {
+        if (sensors.size() > 0) {
             sensor = sensors.get(0);
-            magSensor = sensors2.get(0);
             running = sensorManager.registerListener(
                     sensorEventListener, sensor, 
-                    SensorManager.SENSOR_DELAY_GAME) &&
-                    sensorManager.registerListener(magSensorEventListener, magSensor, SensorManager.SENSOR_DELAY_GAME);
+                    AcceleroSensorManager.sensorDelay);
             listener = accelerometerListener;
         }
     }
     
-    private static SensorEventListener magSensorEventListener =
-    	new SensorEventListener() {
-
-			public void onAccuracyChanged(Sensor sensor, int accuracy) {	
-			}
-
-			public void onSensorChanged(SensorEvent event) {
-				//listener.onMagSensorChanged(event.values[0], event.values[1], event.values[2]);
-			}
-    };
     /**
      * The listener that listen to events from the accelerometer listener
      */

@@ -27,6 +27,21 @@ public class AcceleroScrollDemo extends Activity {
         setContentView(R.layout.main);
     }
     
+    /** Called when the activity is resumed. */
+    @Override
+    public void onResume(){
+    	super.onResume();
+    	startService(new Intent(this, AcceleroScrollService.class));
+    	doBindService();
+    }
+    
+    /** Called when activit paused. */
+    @Override
+    public void onPause(){
+    	super.onPause();
+    	doUnbindService();
+    }
+    
     /** Messenger for communicating with service. */
     Messenger mService = null;
     /** Flag indicating whether we have called bind on the service. */
@@ -41,7 +56,9 @@ public class AcceleroScrollDemo extends Activity {
             switch (msg.what) {
                 case AcceleroScrollService.MSG_UPDATE_VALUES:
                     //do something with the received stuff
-                	Log.v(TAG, "Recieved update from service");
+                	float[] movement = msg.getData().getFloatArray("updateMovement");
+                	float[] speed = msg.getData().getFloatArray("updateSpeed");
+                	Log.v(TAG, "Recieved update from service: " + movement[0]+ " " + movement[1] + " [" + speed[0] + ", " + speed[1]+"].");
                     break;
                 default:
                     super.handleMessage(msg);

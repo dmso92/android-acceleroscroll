@@ -1,6 +1,8 @@
 package com.vutbr.fit.tam.acceleroscroll;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -25,8 +27,14 @@ public class AcceleroScrollService extends Service {
     NotificationManager mNM;
     /** Keeps track of all current registered clients. */
     ArrayList<Messenger> mClients = new ArrayList<Messenger>();
-    /** Holds last value set by a client. */
-    int mValue = 0;
+    
+    /**scrollmanager */
+    private ScrollManager scrollManager = new ScrollManager();
+    /**
+     * Timer to send events to send event updates to clients
+     */
+    private Timer updateTimer; 
+    
 
     /**
      * Command to the service to register a client, receiving callbacks
@@ -109,25 +117,50 @@ public class AcceleroScrollService extends Service {
      * Add a client and optionally start the hardware listeners
      * @param msger the messenger client the callbacks should be sent to
      */
-    private void addClient(Messenger msger){
+    private synchronized void addClient(Messenger msger){
     	if(mClients.size() == 0){
     		//if the first client start listening on accelerometer
+    		scrollManager.resetState();
+    		AcceleroSensorManager.startListening(this, scrollManager);
+    		
+    		
+    		//start the timer to add send update to clients
+    		updateTimer = new Timer(true);
+    		updateTimer.scheduleAtFixedRate(new TimerTask() {
+				
+				@Override
+				public void run() {
+					AcceleroScrollService.this.sendUpdateMessage();
+				}
+			}, 20 , 100);
     	}
         mClients.add(msger);
         Log.v(TAG, "Client added." + mClients.size());
     }
     
-    private void removeClient(Messenger msger){
+    private synchronized void removeClient(Messenger msger){
         mClients.remove(msger);
         if(mClients.size() == 0){
         	//if the last client stop listening on accelerometer
+        	AcceleroSensorManager.stopListening();
+        	if(updateTimer != null) {
+	        	updateTimer.cancel();
+	        	updateTimer.purge();
+	        	updateTimer = null;
+        	}
         }
         Log.v(TAG, "Client removed." + mClients.size());
     }
     
-    private void removeClient(int index){
+    private synchronized void removeClient(int index){
     	mClients.remove(index);
     	if(mClients.size() == 0){
+    		AcceleroSensorManager.stopListening();
+    		if(updateTimer != null) {
+	        	updateTimer.cancel();
+	        	updateTimer.purge();
+	        	updateTimer = null;
+        	}
     	}
         Log.v(TAG, "Client removed." + mClients.size());
     }
@@ -150,11 +183,19 @@ public class AcceleroScrollService extends Service {
     	}
     }
     
-    private void sendUpdateMessage(){
+    private synchronized void sendUpdateMessage(){
     	for (int i=mClients.size()-1; i>=0; i--) {
             try {
-                mClients.get(i).send(Message.obtain(null,
-                        MSG_UPDATE_VALUES, 1, 0));
+            	float[] movement = new float[2];
+            	float[] speed = new float[2];
+            	scrollManager.getMovement(movement);
+            	scrollManager.getSpeed(speed);
+            	Bundle data = new Bundle();
+            	data.putFloatArray("updateMovement", movement);
+            	data.putFloatArray("updateSpeed", speed);
+            	Message updateMessage = Message.obtain(null, MSG_UPDATE_VALUES, 0, 0);
+            	updateMessage.setData(data);
+                mClients.get(i).send(updateMessage);
             } catch (RemoteException e) {
                 // The client is dead.  Remove it from the list;
                 // we are going through the list from back to front
@@ -172,6 +213,7 @@ public class AcceleroScrollService extends Service {
 
     @Override
     public void onCreate() {
+    	Log.v(TAG, "succesfully started.");
         mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 
         // Display a notification about us starting.
