@@ -8,36 +8,36 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
-public class AcceleroSensorManager {
+public class AcceleroSensorManager implements AcceleroSensorManagerInterface{
 
-	private static Sensor sensor;
-    private static SensorManager sensorManager;
+	private Sensor sensor;
+    private SensorManager sensorManager;
     // you could use an OrientationListener array instead
     // if you plans to use more than one listener
-    private static AcceleroSensorListener listener;
-    private static int sensorDelay = SensorManager.SENSOR_DELAY_UI;
+    private AcceleroSensorListener listener;
+    private int sensorDelay = SensorManager.SENSOR_DELAY_UI;
     
  
-    public static void setSensorDelay(int sensorDelay) {
-		AcceleroSensorManager.sensorDelay = sensorDelay;
+    public void setSensorDelay(int sensorDelay) {
+		this.sensorDelay = sensorDelay;
 	}
 
 	/** indicates whether or not Accelerometer Sensor is supported */
-    private static Boolean supported;
+    private Boolean supported;
     /** indicates whether or not Accelerometer Sensor is running */
-    private static boolean running = false;
+    private boolean running = false;
  
     /**
      * Returns true if the manager is listening to orientation changes
      */
-    public static boolean isListening() {
+    public boolean isListening() {
         return running;
     }
  
     /**
      * Unregisters listeners
      */
-    public static void stopListening() {
+    public void stopListening() {
         running = false;
         try {
             if (sensorManager != null && sensorEventListener != null) {
@@ -49,7 +49,7 @@ public class AcceleroSensorManager {
     /**
      * Returns true if at least one Accelerometer sensor is available
      */
-    public static boolean isSupported(Context context) {
+    public boolean isSupported(Context context) {
         if (supported == null) {
             if (context != null) {
                 sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
@@ -67,7 +67,7 @@ public class AcceleroSensorManager {
      * @param accelerometerListener
      *             callback for accelerometer events
      */
-    public static void startListening(
+    public void startListening(
     		Context context,
             AcceleroSensorListener accelerometerListener) {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
@@ -76,7 +76,7 @@ public class AcceleroSensorManager {
             sensor = sensors.get(0);
             running = sensorManager.registerListener(
                     sensorEventListener, sensor, 
-                    AcceleroSensorManager.sensorDelay);
+                    AcceleroSensorManager.this.sensorDelay);
             listener = accelerometerListener;
         }
     }
@@ -84,7 +84,7 @@ public class AcceleroSensorManager {
     /**
      * The listener that listen to events from the accelerometer listener
      */
-    private static SensorEventListener sensorEventListener = 
+    private SensorEventListener sensorEventListener = 
         new SensorEventListener() {
  
         private long now = 0;

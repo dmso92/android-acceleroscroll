@@ -35,6 +35,14 @@ public class AcceleroScrollService extends Service {
      */
     private Timer updateTimer; 
     
+    /**
+     * *********************
+     * Just for emulator should be removed from production
+     * 
+     */
+    private boolean useEmulator = true;
+    private AcceleroSensorManagerInterface sensorManager;
+    
 
     /**
      * Command to the service to register a client, receiving callbacks
@@ -121,7 +129,7 @@ public class AcceleroScrollService extends Service {
     	if(mClients.size() == 0){
     		//if the first client start listening on accelerometer
     		scrollManager.resetState();
-    		AcceleroSensorManager.startListening(this, scrollManager);
+    		sensorManager.startListening(this, scrollManager);
     		
     		
     		//start the timer to add send update to clients
@@ -142,7 +150,7 @@ public class AcceleroScrollService extends Service {
         mClients.remove(msger);
         if(mClients.size() == 0){
         	//if the last client stop listening on accelerometer
-        	AcceleroSensorManager.stopListening();
+        	sensorManager.stopListening();
         	if(updateTimer != null) {
 	        	updateTimer.cancel();
 	        	updateTimer.purge();
@@ -155,7 +163,7 @@ public class AcceleroScrollService extends Service {
     private synchronized void removeClient(int index){
     	mClients.remove(index);
     	if(mClients.size() == 0){
-    		AcceleroSensorManager.stopListening();
+    		sensorManager.stopListening();
     		if(updateTimer != null) {
 	        	updateTimer.cancel();
 	        	updateTimer.purge();
@@ -218,6 +226,11 @@ public class AcceleroScrollService extends Service {
 
         // Display a notification about us starting.
         showNotification();
+        if(useEmulator) {
+        	sensorManager = new EmulatorSensorManager();
+        } else {
+        	sensorManager = new AcceleroSensorManager();
+        }
     }
 
     @Override
@@ -227,6 +240,12 @@ public class AcceleroScrollService extends Service {
 
         // Tell the user we stopped.
         Toast.makeText(this, R.string.background_service_stopped, Toast.LENGTH_SHORT).show();
+        sensorManager.stopListening();
+    	if(updateTimer != null) {
+        	updateTimer.cancel();
+        	updateTimer.purge();
+        	updateTimer = null;
+    	}
     }
 
     /**
