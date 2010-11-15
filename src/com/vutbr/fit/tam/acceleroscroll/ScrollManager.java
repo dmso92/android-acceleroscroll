@@ -118,7 +118,6 @@ public class ScrollManager implements AcceleroSensorListener {
 		return (float) Math.acos(axis1/Math.sqrt(axis1*axis1 + axis2*axis2));
 	}
 	
-	@Override
 	public void onAccelerationChanged(float x, float y, float z, float timeDiff) {
 		
 		//first fill the history before giving any data away
