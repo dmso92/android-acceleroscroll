@@ -87,18 +87,25 @@ public class AcceleroScrollDemo extends Activity {
             // We want to monitor the service for as long as we are
             // connected to it.
             try {
-                Message msg = Message.obtain(null,
-                        AcceleroScrollService.MSG_REGISTER_CLIENT);
-                msg.replyTo = mMessenger;
-                mService.send(msg);
-
+            	Message msg = Message.obtain(null,
+            			AcceleroScrollService.MSG_RESET_VALUE);
+            	mService.send(msg);
+            	
                 // Give it some value as an example.
                 Bundle msgBundle = new Bundle();
-                msgBundle.putFloat("acceleration", 2.3f);
+                msgBundle.putFloat("value", 2.0f);
                 msg = Message.obtain(null,
                         AcceleroScrollService.MSG_SET_PREFERENCES_VALUE,
                         AcceleroScrollService.PREFERENCE_ACCELERATION, 0);
+                msg.setData(msgBundle);
                 mService.send(msg);
+
+                msg = Message.obtain(null,
+                        AcceleroScrollService.MSG_REGISTER_CLIENT);
+                msg.replyTo = mMessenger;
+                mService.send(msg);
+                
+                
             } catch (RemoteException e) {
                 // In this case the service has crashed before we could even
                 // do anything with it; we can count on soon being

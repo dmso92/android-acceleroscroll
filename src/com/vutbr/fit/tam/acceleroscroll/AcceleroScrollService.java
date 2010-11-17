@@ -71,7 +71,7 @@ public class AcceleroScrollService extends Service {
     static final int MSG_GET_PREFERENCES_VALUE = 4;
     /**
      * Command to service to adjust preferences. Arg1 should define the preference type
-     * and the based on the content a Bundle set with setData should be added.
+     * and the based on the content a Bundle set with setData should be added (with string "value")
      */
     static final int MSG_SET_PREFERENCES_VALUE = 5;
     
@@ -112,6 +112,9 @@ public class AcceleroScrollService extends Service {
                 case MSG_UNREGISTER_CLIENT:
                 	removeClient(msg.replyTo);
                     break;
+                case MSG_RESET_VALUE:
+                	scrollManager.resetState();
+                	break;
                 case MSG_SET_PREFERENCES_VALUE:
                     setPreferencesValue(msg.arg1, msg.getData());
                     break;
@@ -128,9 +131,7 @@ public class AcceleroScrollService extends Service {
     private synchronized void addClient(Messenger msger){
     	if(mClients.size() == 0){
     		//if the first client start listening on accelerometer
-    		scrollManager.resetState();
     		sensorManager.startListening(this, scrollManager);
-    		
     		
     		//start the timer to add send update to clients
     		updateTimer = new Timer(true);
@@ -177,16 +178,16 @@ public class AcceleroScrollService extends Service {
     	Log.v(TAG, "Preference value change request.");
     	switch(type){
     	case PREFERENCE_ACCELERATION:
-    		//set accel pref
+    		scrollManager.setAcceleration(data.getFloat("value"));
     		break;
     	case PREFERENCE_MAX_SCROLL_SPEED:
-    		//set max scroll speed
+    		scrollManager.setMaxSpeed(data.getFloat("value"));
     		break;
     	case PREFERENCE_SPRINGNESS:
-    		//set springness
+    		scrollManager.setSpringness(data.getFloat("value"));
     		break;
     	case PREFERENCE_THRESHOLD:
-    		//set threshold
+    		scrollManager.setThreshold(data.getFloat("value"));
     		break;
     	}
     }
