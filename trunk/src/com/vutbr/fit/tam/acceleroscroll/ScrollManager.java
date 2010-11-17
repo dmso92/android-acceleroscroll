@@ -13,6 +13,8 @@ public class ScrollManager implements AcceleroSensorListener {
 	private float threshold = 0.03f;
 	private float minSpeed = 30.0f;
 	private float maxSpeed = 100.0f;
+	private float acceleration = 1.0f;
+	private float springness = 1.0f;
 	
 	private static int HISTORY_SIZE = 2;
 	private float[] accelerationHistory = new float[HISTORY_SIZE*3];
@@ -42,11 +44,13 @@ public class ScrollManager implements AcceleroSensorListener {
 		}
 		
 		for(int i=0; i<3; i++){
-			avgValues[i] /= HISTORY_SIZE + 1;
+			avgValues[i] /= HISTORY_SIZE;
 		}
 		tiltReference = this.getAngle(avgValues[0], avgValues[1]);
-		rotateXReference = this.getAngle(avgValues[1], avgValues[2]);
-		rotateYReference = this.getAngle(avgValues[0], avgValues[2]);
+		rotateXReference = this.getAngle(avgValues[1], 
+				(float) Math.sqrt(avgValues[2]*avgValues[2] + avgValues[0]*avgValues[0]));
+		rotateYReference = this.getAngle(avgValues[0], 
+				(float) Math.sqrt(avgValues[2]*avgValues[2]+avgValues[1]*avgValues[1]));
 		speed[0] = 0.0f;
 		speed[1] = 0.0f;
 		movement[0] = 0.0f;
@@ -77,6 +81,22 @@ public class ScrollManager implements AcceleroSensorListener {
 
 	public void setMaxSpeed(float maxSpeed) {
 		this.maxSpeed = maxSpeed;
+	}
+	
+	public float getAcceleration() {
+		return acceleration;
+	}
+
+	public void setAcceleration(float acceleration) {
+		this.acceleration = acceleration;
+	}
+
+	public float getSpringness() {
+		return springness;
+	}
+
+	public void setSpringness(float springness) {
+		this.springness = springness;
 	}
 
 	public int getPortrait() {
@@ -151,7 +171,7 @@ public class ScrollManager implements AcceleroSensorListener {
 		
 		float resultSize = 0.0f;
 		for(int i=0; i<3; i++){
-			avgValues[i] /= HISTORY_SIZE + 1;
+			avgValues[i] /= HISTORY_SIZE;
 			//get the vector size to be able to get the angles
 			resultSize += avgValues[i]*avgValues[i];
 		}
@@ -168,8 +188,10 @@ public class ScrollManager implements AcceleroSensorListener {
 		 * rotateY - rotated around Y axis -> left right
 		 */
 		float tilt = tiltReference - this.getAngle(avgValues[0], avgValues[1]);
-		float rotateX = rotateXReference - this.getAngle(avgValues[1], avgValues[2]);
-		float rotateY = rotateYReference - this.getAngle(avgValues[0], avgValues[2]);
+		float rotateX = rotateXReference - this.getAngle(avgValues[1], 
+				(float) Math.sqrt(avgValues[2]*avgValues[2]+avgValues[0]*avgValues[0]));
+		float rotateY = rotateYReference - this.getAngle(avgValues[0], 
+				(float) Math.sqrt(avgValues[2]*avgValues[2]+avgValues[1]*avgValues[1]));
 		
 		float movementX=0, movementY=0;
 		float speedX = 0, speedY =0, cspeedX, cspeedY;
@@ -179,6 +201,8 @@ public class ScrollManager implements AcceleroSensorListener {
 		}
 		
 		//check if tilt is over threshold
+		//TODO add this
+		/*
 		if(tilt > threshold){
 			if(portrait % 2 == 0){
 				movementX += Math.sin(tilt);
@@ -186,6 +210,7 @@ public class ScrollManager implements AcceleroSensorListener {
 				movementY += Math.sin(tilt);
 			}
 		}
+		*/
 		
 		//TODO fix this
 		//if in landscape mode switch axis
@@ -201,7 +226,7 @@ public class ScrollManager implements AcceleroSensorListener {
 				movementX += Math.sin(rotateY);
 			speedX = getCurrentSpeed(cspeedX, movementX, timeDiff);
 		} else {
-			//speedX = (1 - timeDiff/1.0e9f)*cspeedX;
+			speedX = (1 - timeDiff*springness/1.0e9f)*cspeedX;
 		}
 		
 		//calculate the next speed
@@ -210,23 +235,26 @@ public class ScrollManager implements AcceleroSensorListener {
 				movementY += Math.sin(rotateX);
 			speedY = getCurrentSpeed(cspeedY, movementY, timeDiff);
 		} else {
-			//speedY = (1 - timeDiff/1e9f)*cspeedY;
+			speedY = (1 - timeDiff*springness/1e9f)*cspeedY;
 		}
 		
 		synchronized (this) {
 			speed[0] = speedX;
 			speed[1] = speedY;
-			movement[0] += speedX*timeDiff/10e9f;
-			movement[1] += speedY*timeDiff/10e9f;
+			movement[0] += speedX*timeDiff/1e9f;
+			movement[1] += speedY*timeDiff/1e9f;
 		}
-		Log.v(TAG, "Current speed: " + speedX + ", " + speedY);
+		Log.v(TAG, "Current speed: " + speedX + ", " + speedY + " [" + movementX + ", " + movementY + "]");
 		Log.v(TAG, "Current difference: " + tilt + ", " + rotateX + ", " + rotateY);
 	}
 	
 	private float getCurrentSpeed(float currentSpeed, float movement, float timeDiff){
-		return currentSpeed - movement*minSpeed*(
-				(float) Math.cos(Math.PI + Math.abs(currentSpeed/maxSpeed))+1
-				)/2.0f;
+		return currentSpeed + movement*minSpeed*(
+				(float) Math.cos(Math.min(
+						Math.abs((currentSpeed+Math.signum(movement)))/(maxSpeed*movement), 
+						Math.PI
+						))
+				)*timeDiff/1e9f*acceleration;
 	}
 
 }
