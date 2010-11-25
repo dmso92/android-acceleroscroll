@@ -66,7 +66,8 @@ public class AcceleroScrollService extends Service {
     
     /**
      * Command to get preferences value. Arg1 should be defined as id. A message will be sent
-     * back with the given arg1 and data connected to the preference type
+     * back with the given arg1 and data connected to the preference type.
+     * The sender should set the replyTo parameter in message
      */
     static final int MSG_GET_PREFERENCES_VALUE = 4;
     /**
@@ -92,6 +93,10 @@ public class AcceleroScrollService extends Service {
      * phone was returned to original position
      */
     static final int PREFERENCE_SPRINGNESS = 3;
+    /**
+     * Set phone gui orientation. The bundle data should define orientation
+     */
+    static final int PREFERENCE_PORTRAIT = 4;
 
     /**
      * Message to clients with the updated values.
@@ -115,6 +120,8 @@ public class AcceleroScrollService extends Service {
                 case MSG_RESET_VALUE:
                 	scrollManager.resetState();
                 	break;
+                case MSG_GET_PREFERENCES_VALUE:
+                	getPreferencesValue(msg.arg1, msg.replyTo);
                 case MSG_SET_PREFERENCES_VALUE:
                     setPreferencesValue(msg.arg1, msg.getData());
                     break;
@@ -174,6 +181,38 @@ public class AcceleroScrollService extends Service {
         Log.v(TAG, "Client removed." + mClients.size());
     }
     
+    private void getPreferencesValue(int type, Messenger msger){
+    	Log.v(TAG, "Preference value change request.");
+    	Bundle data = new Bundle();
+    	Message updateMessage = Message.obtain(null, MSG_GET_PREFERENCES_VALUE, 0, 0);
+    	switch(type){
+	    	case PREFERENCE_ACCELERATION:
+	    		updateMessage.arg1 = PREFERENCE_ACCELERATION;
+	    		data.putFloat("value", scrollManager.getAcceleration());
+	    		break;
+	    	case PREFERENCE_MAX_SCROLL_SPEED:
+	    		updateMessage.arg1 = PREFERENCE_MAX_SCROLL_SPEED;
+	    		data.putFloat("value", scrollManager.getMaxSpeed());
+	    		break;
+	    	case PREFERENCE_SPRINGNESS:
+	    		updateMessage.arg1 = PREFERENCE_SPRINGNESS;
+	    		data.putFloat("value", scrollManager.getSpringness());
+	    		break;
+	    	case PREFERENCE_THRESHOLD:
+	    		updateMessage.arg1 = PREFERENCE_THRESHOLD;
+	    		data.putFloat("value", scrollManager.getThreshold());
+	    		break;
+    		default:
+    			return;
+    	}
+
+    	try {
+    		msger.send(updateMessage);
+    	} catch (RemoteException e) {
+        	Log.w(TAG, "Client dissappeared without unreginstering.");
+    	}
+    }
+    
     private void setPreferencesValue(int type, Bundle data){
     	Log.v(TAG, "Preference value change request.");
     	switch(type){
@@ -188,6 +227,9 @@ public class AcceleroScrollService extends Service {
     		break;
     	case PREFERENCE_THRESHOLD:
     		scrollManager.setThreshold(data.getFloat("value"));
+    		break;
+    	case PREFERENCE_PORTRAIT:
+    		scrollManager.setPortrait(data.getInt("value"));
     		break;
     	}
     }
