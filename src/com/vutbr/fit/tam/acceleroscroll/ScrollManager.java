@@ -10,7 +10,7 @@ public class ScrollManager implements AcceleroSensorListener {
 	private float[] speed = new float[2]; //in mm/s
 	private float[] movement = new float[2]; //in mm
 	
-	private float threshold = 0.03f;
+	private float threshold = 0.1f;
 	private float minSpeed = 30.0f;
 	private float maxSpeed = 100.0f;
 	private float acceleration = 1.0f;
@@ -24,17 +24,17 @@ public class ScrollManager implements AcceleroSensorListener {
 	private int portrait = 1;
 	
 	/**
-	 * tilt - right/left when tilted - rotated around the mobile phones Z axis
 	 * rotateX - rotated around X axis -> up, down
 	 * rotateY - rotated around Y axis -> left right
 	 */
-	private float tiltReference;
 	private float rotateXReference;
 	private float rotateYReference;
 	
 	public synchronized boolean resetState(){
-		if(onStart)
-			return false;
+		if(onStart) {
+			Log.w(TAG, "Reset called before accelerometer could initialize");
+			return false;	
+		}
 		float[] avgValues = new float[3];
 		//now we can start counting
 		for(int i = 0; i<HISTORY_SIZE; i++){
@@ -46,7 +46,6 @@ public class ScrollManager implements AcceleroSensorListener {
 		for(int i=0; i<3; i++){
 			avgValues[i] /= HISTORY_SIZE;
 		}
-		tiltReference = this.getAngle(avgValues[0], avgValues[1]);
 		rotateXReference = this.getAngle(avgValues[1], 
 				(float) Math.sqrt(avgValues[2]*avgValues[2] + avgValues[0]*avgValues[0]));
 		rotateYReference = this.getAngle(avgValues[0], 
@@ -55,7 +54,7 @@ public class ScrollManager implements AcceleroSensorListener {
 		speed[1] = 0.0f;
 		movement[0] = 0.0f;
 		movement[1] = 0.0f;
-		Log.v(TAG, "Reseted state: " + tiltReference + ", " + rotateXReference + ", " + rotateYReference);
+		Log.v(TAG, "Reseted state: " + rotateXReference + ", " + rotateYReference);
 		return true;
 	}
 	
@@ -76,11 +75,12 @@ public class ScrollManager implements AcceleroSensorListener {
 	}
 
 	public float getMaxSpeed() {
-		return maxSpeed;
+		return (float) (maxSpeed*Math.PI/2.0);
 	}
 
 	public void setMaxSpeed(float maxSpeed) {
-		this.maxSpeed = maxSpeed;
+		this.maxSpeed = (float) (maxSpeed*2.0f/Math.PI);
+		this.setMinSpeed(this.maxSpeed*0.3f);
 	}
 	
 	public float getAcceleration() {
@@ -142,15 +142,17 @@ public class ScrollManager implements AcceleroSensorListener {
 		
 		//first fill the history before giving any data away
 		if(onStart){
-			accelerationHistory[historyIndex] = x;
-			accelerationHistory[historyIndex+1] = y;
-			accelerationHistory[historyIndex+2] = z;
-			historyIndex++;
-			if(historyIndex == HISTORY_SIZE) {
-				historyIndex = 0;
-				onStart = false;
+			synchronized (this) {
+				accelerationHistory[historyIndex] = x;
+				accelerationHistory[historyIndex+1] = y;
+				accelerationHistory[historyIndex+2] = z;
+				historyIndex++;
+				if(historyIndex == HISTORY_SIZE) {
+					historyIndex = 0;
+					onStart = false;
+					this.resetState();
+				}
 			}
-			this.resetState();
 			return;
 		}
 		
@@ -183,11 +185,9 @@ public class ScrollManager implements AcceleroSensorListener {
 		 * z - camera direction at the back of the device
 		 * 
 		 * all below anticlockwise is positive
-		 * tilt - right/left when tilted - rotated around the mobile phones Z axis
 		 * rotateX - rotated around X axis -> up, down
 		 * rotateY - rotated around Y axis -> left right
 		 */
-		float tilt = tiltReference - this.getAngle(avgValues[0], avgValues[1]);
 		float rotateX = rotateXReference - this.getAngle(avgValues[1], 
 				(float) Math.sqrt(avgValues[2]*avgValues[2]+avgValues[0]*avgValues[0]));
 		float rotateY = rotateYReference - this.getAngle(avgValues[0], 
@@ -200,17 +200,6 @@ public class ScrollManager implements AcceleroSensorListener {
 			cspeedY = speed[1];
 		}
 		
-		//check if tilt is over threshold
-		//TODO add this
-		/*
-		if(tilt > threshold){
-			if(portrait % 2 == 0){
-				movementX += Math.sin(tilt);
-			} else {
-				movementY += Math.sin(tilt);
-			}
-		}
-		*/
 		
 		//TODO fix this
 		//if in landscape mode switch axis
@@ -221,18 +210,16 @@ public class ScrollManager implements AcceleroSensorListener {
 		}
 		
 		//calculate the next speed based on the current
-		if(movementX > 0 || Math.abs(rotateY) > threshold){
-			if(Math.abs(rotateY) > threshold) 
-				movementX += Math.sin(rotateY);
+		if(Math.abs(rotateY) > threshold) { 
+			movementX = (float) Math.sin(rotateY);
 			speedX = getCurrentSpeed(cspeedX, movementX, timeDiff);
 		} else {
 			speedX = (1 - timeDiff*springness/1.0e9f)*cspeedX;
 		}
 		
 		//calculate the next speed
-		if(movementY > 0 || Math.abs(rotateX) > threshold){
-			if(Math.abs(rotateX) > threshold)
-				movementY += Math.sin(rotateX);
+		if(Math.abs(rotateX) > threshold) {
+			movementY = (float) Math.sin(rotateX);
 			speedY = getCurrentSpeed(cspeedY, movementY, timeDiff);
 		} else {
 			speedY = (1 - timeDiff*springness/1e9f)*cspeedY;
@@ -244,8 +231,8 @@ public class ScrollManager implements AcceleroSensorListener {
 			movement[0] += speedX*timeDiff/1e9f;
 			movement[1] += speedY*timeDiff/1e9f;
 		}
-		Log.v(TAG, "Current speed: " + speedX + ", " + speedY + " [" + movementX + ", " + movementY + "]");
-		Log.v(TAG, "Current difference: " + tilt + ", " + rotateX + ", " + rotateY);
+		//Log.v(TAG, "Current speed: " + speedX + ", " + speedY + " [" + movementX + ", " + movementY + "]");
+		//Log.v(TAG, "Current difference: " + rotateX + ", " + rotateY);
 	}
 	
 	private float getCurrentSpeed(float currentSpeed, float movement, float timeDiff){
