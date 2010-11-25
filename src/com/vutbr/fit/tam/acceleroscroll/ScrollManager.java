@@ -14,7 +14,7 @@ public class ScrollManager implements AcceleroSensorListener {
 	private float minSpeed = 30.0f;
 	private float maxSpeed = 100.0f;
 	private float acceleration = 1.0f;
-	private float springness = 1.0f;
+	private float springness = 1.5f;
 	
 	private static int HISTORY_SIZE = 2;
 	private float[] accelerationHistory = new float[HISTORY_SIZE*3];
@@ -213,6 +213,9 @@ public class ScrollManager implements AcceleroSensorListener {
 		if(Math.abs(rotateY) > threshold) { 
 			movementX = (float) Math.sin(rotateY);
 			speedX = getCurrentSpeed(cspeedX, movementX, timeDiff);
+			if(Math.signum(speedX) != Math.signum(movementX)){
+				speedX *= (1 - timeDiff*springness/1.0e9f);
+			}
 		} else {
 			speedX = (1 - timeDiff*springness/1.0e9f)*cspeedX;
 		}
@@ -221,6 +224,9 @@ public class ScrollManager implements AcceleroSensorListener {
 		if(Math.abs(rotateX) > threshold) {
 			movementY = (float) Math.sin(rotateX);
 			speedY = getCurrentSpeed(cspeedY, movementY, timeDiff);
+			if(Math.signum(speedY) != Math.signum(movementY)){
+				speedY *= (1 - timeDiff*springness/1.0e9f);
+			}
 		} else {
 			speedY = (1 - timeDiff*springness/1e9f)*cspeedY;
 		}

@@ -9,6 +9,8 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -22,6 +24,7 @@ public class AcceleroScrollService extends Service {
 	
 	/** Tag for logging. */
 	private static final String TAG = "AcceleroScrollService";
+	private static final String PREFS_NAME = "AcceleroScrollServicePrefs";
 	
 	/** For showing and hiding our notification. */
     NotificationManager mNM;
@@ -33,7 +36,9 @@ public class AcceleroScrollService extends Service {
     /**
      * Timer to send events to send event updates to clients
      */
-    private Timer updateTimer; 
+    private Timer updateTimer;
+    
+    private float updateFPS = 20.0f;
     
     /**
      * *********************
@@ -97,6 +102,10 @@ public class AcceleroScrollService extends Service {
      * Set phone gui orientation. The bundle data should define orientation
      */
     static final int PREFERENCE_PORTRAIT = 4;
+    /**
+     * Set update message FPS. The bundla data "value" should containt required fps
+     */
+    static final int PREFERENCE_FPS = 5;
 
     /**
      * Message to clients with the updated values.
@@ -141,17 +150,29 @@ public class AcceleroScrollService extends Service {
     		sensorManager.startListening(this, scrollManager);
     		
     		//start the timer to add send update to clients
-    		updateTimer = new Timer(true);
-    		updateTimer.scheduleAtFixedRate(new TimerTask() {
-				
-				@Override
-				public void run() {
-					AcceleroScrollService.this.sendUpdateMessage();
-				}
-			}, 20 , 100);
+    		this.startTimer();
     	}
         mClients.add(msger);
         Log.v(TAG, "Client added." + mClients.size());
+    }
+    
+    private synchronized void startTimer(){
+    	updateTimer = new Timer(true);
+		updateTimer.scheduleAtFixedRate(new TimerTask() {
+			
+			@Override
+			public void run() {
+				AcceleroScrollService.this.sendUpdateMessage();
+			}
+		}, (long) (1000/this.updateFPS), 100);
+    }
+    
+    private synchronized void stopTimer(){
+    	if(updateTimer != null) {
+        	updateTimer.cancel();
+        	updateTimer.purge();
+        	updateTimer = null;
+    	}
     }
     
     private synchronized void removeClient(Messenger msger){
@@ -159,11 +180,7 @@ public class AcceleroScrollService extends Service {
         if(mClients.size() == 0){
         	//if the last client stop listening on accelerometer
         	sensorManager.stopListening();
-        	if(updateTimer != null) {
-	        	updateTimer.cancel();
-	        	updateTimer.purge();
-	        	updateTimer = null;
-        	}
+        	this.stopTimer();
         }
         Log.v(TAG, "Client removed." + mClients.size());
     }
@@ -172,11 +189,7 @@ public class AcceleroScrollService extends Service {
     	mClients.remove(index);
     	if(mClients.size() == 0){
     		sensorManager.stopListening();
-    		if(updateTimer != null) {
-	        	updateTimer.cancel();
-	        	updateTimer.purge();
-	        	updateTimer = null;
-        	}
+    		this.stopTimer();
     	}
         Log.v(TAG, "Client removed." + mClients.size());
     }
@@ -202,6 +215,10 @@ public class AcceleroScrollService extends Service {
 	    		updateMessage.arg1 = PREFERENCE_THRESHOLD;
 	    		data.putFloat("value", scrollManager.getThreshold());
 	    		break;
+	    	case PREFERENCE_FPS:
+	    		updateMessage.arg1 = PREFERENCE_FPS;
+	    		data.putFloat("value", this.updateFPS);
+	    		break;
     		default:
     			return;
     	}
@@ -215,22 +232,35 @@ public class AcceleroScrollService extends Service {
     
     private void setPreferencesValue(int type, Bundle data){
     	Log.v(TAG, "Preference value change request.");
+
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+    	
     	switch(type){
     	case PREFERENCE_ACCELERATION:
     		scrollManager.setAcceleration(data.getFloat("value"));
+    		editor.putFloat("acceleration", scrollManager.getAcceleration());
     		break;
     	case PREFERENCE_MAX_SCROLL_SPEED:
     		scrollManager.setMaxSpeed(data.getFloat("value"));
+            editor.putFloat("max_scroll_speed", scrollManager.getMaxSpeed());
     		break;
     	case PREFERENCE_SPRINGNESS:
     		scrollManager.setSpringness(data.getFloat("value"));
+            editor.putFloat("springness", scrollManager.getSpringness());
     		break;
     	case PREFERENCE_THRESHOLD:
     		scrollManager.setThreshold(data.getFloat("value"));
+            editor.putFloat("threshold", scrollManager.getThreshold());
     		break;
     	case PREFERENCE_PORTRAIT:
     		scrollManager.setPortrait(data.getInt("value"));
     		break;
+    	case PREFERENCE_FPS:
+    		this.updateFPS = Math.max(data.getFloat("value"), 2.0f);
+            editor.putFloat("acceleration", this.updateFPS);
+    		this.stopTimer();
+    		this.startTimer();
     	}
     }
     
@@ -240,6 +270,9 @@ public class AcceleroScrollService extends Service {
             	float[] movement = new float[2];
             	float[] speed = new float[2];
             	scrollManager.getMovement(movement);
+            	if(Math.max(Math.abs(movement[0]), Math.abs(movement[1])) < 1e-3){
+            		return;
+            	}
             	scrollManager.getSpeed(speed);
             	Bundle data = new Bundle();
             	data.putFloatArray("updateMovement", movement);
@@ -264,6 +297,7 @@ public class AcceleroScrollService extends Service {
 
     @Override
     public void onCreate() {
+    	super.onCreate();
     	Log.v(TAG, "succesfully started.");
         mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 
@@ -274,6 +308,12 @@ public class AcceleroScrollService extends Service {
         } else {
         	sensorManager = new AcceleroSensorManager();
         }
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        scrollManager.setAcceleration(settings.getFloat("acceleration", scrollManager.getAcceleration()));
+        scrollManager.setMaxSpeed(settings.getFloat("max_scroll_speed", scrollManager.getMaxSpeed()));
+        scrollManager.setSpringness(settings.getFloat("springness", scrollManager.getSpringness()));
+        scrollManager.setThreshold(settings.getFloat("threshold", scrollManager.getThreshold()));
+        this.updateFPS = settings.getFloat("acceleration", this.updateFPS);
     }
 
     @Override
@@ -284,11 +324,7 @@ public class AcceleroScrollService extends Service {
         // Tell the user we stopped.
         Toast.makeText(this, R.string.background_service_stopped, Toast.LENGTH_SHORT).show();
         sensorManager.stopListening();
-    	if(updateTimer != null) {
-        	updateTimer.cancel();
-        	updateTimer.purge();
-        	updateTimer = null;
-    	}
+    	this.stopTimer();
     }
 
     /**
@@ -298,6 +334,14 @@ public class AcceleroScrollService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return mMessenger.getBinder();
+    }
+    
+    @Override
+    public boolean onUnbind(Intent intent){
+    	super.onUnbind(intent);
+    	sensorManager.stopListening();
+    	this.stopTimer();
+    	return false;
     }
 
     /**
