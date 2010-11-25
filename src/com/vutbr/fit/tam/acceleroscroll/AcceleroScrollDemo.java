@@ -6,6 +6,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -13,6 +15,8 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
+import android.view.Display;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 
@@ -20,11 +24,39 @@ public class AcceleroScrollDemo extends Activity {
 	
 	private static final String TAG = "AcceleroScrollDemo";
 	
+	private Bitmap scrollImage;
+	private int maxHTScroll = 0;
+	private int maxHBScroll = 0;
+	private int maxWRScroll = 0;
+	private int maxWLScroll = 0;
+	private int currentPosX = 0;
+	private int currentPosY = 0;
+	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        
+        startService(new Intent(this, AcceleroScrollService.class));
+    	doBindService();
+    	
+    	scrollImage = BitmapFactory.decodeResource(getResources(), R.drawable.android);
+    	ImageView scrollView = (ImageView) findViewById(R.id.scrollView);
+    	scrollView.setImageBitmap(scrollImage);
+    	
+    	Display display = getWindowManager().getDefaultDisplay(); 
+    	int displayWidth = display.getWidth();
+    	int displayHeight = display.getHeight();
+        	
+    	maxHTScroll = (int)((scrollImage.getHeight()/2) - (displayHeight /2));
+    	maxWRScroll = (int)((scrollImage.getWidth()/2) - (displayWidth /2));
+    	maxHBScroll = maxHTScroll * -1;
+    	maxWLScroll = maxWRScroll * -1;
+    	
+    	//Log.v(TAG, "viewHeight: " + displayHeight + " viewWidth: " + displayWidth + " maxHScroll: " + maxHScroll + " maxWScroll: " + maxWScroll);
+    	
     }
     
     /** Called when the activity is resumed. */
@@ -56,10 +88,62 @@ public class AcceleroScrollDemo extends Activity {
             switch (msg.what) {
                 case AcceleroScrollService.MSG_UPDATE_VALUES:
                     //do something with the received stuff
+                	int scrollX = 0;
+                	int scrollY = 0;
+                	
                 	float[] movement = msg.getData().getFloatArray("updateMovement");
                 	float[] speed = msg.getData().getFloatArray("updateSpeed");
                 	Log.v(TAG, "Recieved update from service: " + movement[0]+ " " + movement[1] + " [" + speed[0] + ", " + speed[1]+"].");
-                    break;
+                	
+                	int moveX = (int)movement[0];
+                	int moveY = (int)movement[1];
+                	
+                	int nextX = currentPosX + moveX;
+                	int nextY = currentPosY + moveY;
+                	
+                	if(moveX < 0 && currentPosX != maxWLScroll){
+	                	if (nextX < maxWLScroll){ 
+	                		currentPosX = maxWLScroll;
+	                		scrollX = nextX - maxWLScroll;
+	                	} else {
+	                		currentPosX = nextX;
+	                		scrollX = (int)movement[0];
+	                	}
+                	}
+                	if (moveX > 0 && currentPosX != maxWRScroll){
+	                	if (nextX > maxWRScroll){ 
+	                		currentPosX = maxWRScroll;
+	                		scrollX = nextX - maxWRScroll;
+	                	} else {
+	                		currentPosX = nextX;
+	                		scrollX = (int)movement[0];
+	                	}
+                	}
+                	
+                	if (moveY < 0 && currentPosY != maxHBScroll){
+	                	if (nextY < maxHBScroll){ 
+	                		currentPosY = maxHBScroll;
+	                		scrollY = nextY - maxHBScroll;
+	                	} else {
+	                		currentPosY = nextY;
+	                		scrollY = (int)movement[1];
+	                	}
+                	}
+                	if (moveY > 0 && currentPosY != maxHTScroll){
+	                	if (nextY > maxHTScroll){ 
+	                		currentPosY = maxHTScroll;
+	                		scrollY = nextY - maxHTScroll;
+	                	} else {
+	                		currentPosY = nextY;
+	                		scrollY = (int)movement[1];
+	                	}
+                	}
+                	
+                	ImageView scrollViewH = (ImageView) findViewById(R.id.scrollView);
+                	scrollViewH.scrollBy(scrollX, scrollY);
+                	Log.v(TAG, "scrollX: " + scrollX + " scrollY: " + scrollY);
+                	
+                	break;
                 default:
                     super.handleMessage(msg);
             }
