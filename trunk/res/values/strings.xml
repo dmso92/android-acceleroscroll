@@ -7,4 +7,5 @@
 <string name="background_service_stopped">AcceleroScroll Service stopped</string>
 <string name="background_service_connected">Successfully connected to service.</string>
 <string name="background_service_disconnected">Disconnected from service.</string>
+<string name="service_preferences">Service preferences</string>
 </resources>
