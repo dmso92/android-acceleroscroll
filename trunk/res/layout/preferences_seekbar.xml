@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" 
+	android:layout_height="fill_parent"
+	android:stretchColumns="1">
+
+<TableRow android:id="@+id/TableRow01" 
+			android:layout_height="wrap_content" 
+			android:layout_width="fill_parent">
+	<SeekBar android:layout_height="wrap_content" 
+				android:layout_width="fill_parent" 
+				android:padding="3dip"
+				android:layout_span="2" android:id="@+id/seekbar">
+	</SeekBar>
+</TableRow>
+<TableRow android:id="@+id/TableRow02" 
+			android:layout_height="wrap_content" 
+			android:layout_width="fill_parent">
+	<TextView android:layout_width="wrap_content" 
+				android:layout_height="wrap_content" 
+				android:layout_gravity="left" 
+				android:text="minVal" 
+				android:padding="3dip" android:id="@+id/minText">
+	</TextView>
+	<TextView android:layout_width="wrap_content" 
+				android:layout_height="wrap_content" 
+				android:layout_gravity="right" 
+				android:text="maxVal" 
+				android:padding="3dip" android:id="@+id/maxText">
+	</TextView>
+</TableRow>
+
+
+
+</TableLayout>
