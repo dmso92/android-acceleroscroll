@@ -1,7 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
-  xmlns:android="http://schemas.android.com/apk/res/android">
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:ac="http://schemas.android.com/apk/res/com.vutbr.fit.tam.acceleroscroll">
 
 <PreferenceCategory android:title="@string/service_preferences">
+	<com.vutbr.fit.tam.acceleroscroll.SeekBarPreference
+		android:key="springness"
+		android:title="@string/title_springness"
+		android:summary="@string/summary_springness"
+		android:persistent="false"
+		ac:intervalMax="5.0"
+		ac:intervalMin="0.1"
+		android:defaultValue="1.5"
+	/>
+	<com.vutbr.fit.tam.acceleroscroll.SeekBarPreference
+		android:key="acceleration"
+		android:title="@string/title_acceleration"
+		android:summary="@string/summary_acceleration"
+		android:persistent="false"
+		ac:intervalMax="5.0"
+		ac:intervalMin="0.1"
+		android:defaultValue="1.0"
+	/>
+	<com.vutbr.fit.tam.acceleroscroll.SeekBarPreference
+		android:key="maxspeed"
+		android:title="@string/title_maxspeed"
+		android:summary="@string/summary_maxspeed"
+		android:persistent="false"
+		ac:intervalMax="150.0"
+		ac:intervalMin="20.0"
+		android:defaultValue="100.0"
+	/>
+	<com.vutbr.fit.tam.acceleroscroll.SeekBarPreference
+		android:key="threshold"
+		android:title="@string/title_threshold"
+		android:summary="@string/summary_threshold"
+		android:persistent="false"
+		ac:intervalMax="0.2"
+		ac:intervalMin="0.01"
+		android:defaultValue="0.1"
+	/>
 </PreferenceCategory>
 </PreferenceScreen>

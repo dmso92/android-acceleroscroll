@@ -8,4 +8,14 @@
 <string name="background_service_connected">Successfully connected to service.</string>
 <string name="background_service_disconnected">Disconnected from service.</string>
 <string name="service_preferences">Service preferences</string>
+<string name="title_acceleration">Acceleration</string>
+<string name="title_springness">Springness</string>
+<string name="title_maxspeed">Max Speed</string>
+<string name="title_threshold">Threshold</string>
+<string name="summary_acceleration"></string>
+<string name="summary_springness"></string>
+<string name="summary_maxspeed"></string>
+<string name="summary_threshold">angle</string>
+<string name="preferences_set_error">Service connection error</string>
+<string name="menu_settings">Settings</string>
 </resources>

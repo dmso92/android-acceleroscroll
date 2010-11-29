@@ -16,6 +16,9 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.Display;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -23,6 +26,7 @@ import android.widget.Toast;
 public class AcceleroScrollDemo extends Activity {
 	
 	private static final String TAG = "AcceleroScrollDemo";
+    private static final int REQUEST_CODE_PREFERENCES = 1;
 	
 	private Bitmap scrollImage;
 	private int maxHTScroll = 0;
@@ -63,15 +67,59 @@ public class AcceleroScrollDemo extends Activity {
     @Override
     public void onResume(){
     	super.onResume();
-    	startService(new Intent(this, AcceleroScrollService.class));
-    	doBindService();
+    	if(!mIsBound){
+    		startService(new Intent(this, AcceleroScrollService.class));
+    		doBindService();
+    	}
     }
     
     /** Called when activit paused. */
     @Override
     public void onPause(){
     	super.onPause();
-    	doUnbindService();
+    	if(mIsBound) 
+    		doUnbindService();
+    }
+    
+    /** Create options menu */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+    	MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.demo_menu, menu);
+    	return true;
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item	){
+    	switch(item.getItemId()){
+    		case R.id.settings:
+    			//When settings is selected, launch an activity through this intent
+    			Intent launchPreferences = new Intent().setClass(this, AcceleroScrollPreferences.class);
+    			
+    			//Make it a subActivity
+    			//startActivityForResult(launchPreferences, REQUEST_CODE_PREFERENCES);
+    			startActivity(launchPreferences);
+    			return true;
+    		default:
+    			return super.onOptionsItemSelected(item);
+    	}
+    }
+    
+    /** on preferences return */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+    	super.onActivityResult(requestCode, resultCode, data);
+    	
+    	if (requestCode == REQUEST_CODE_PREFERENCES) {
+    		try {
+	        	Message msg = Message.obtain(null,
+	        			AcceleroScrollService.MSG_RESET_VALUE);
+	        	mService.send(msg);
+    		} catch (RemoteException e) {
+    			doUnbindService();
+    			doBindService();
+    		}
+    	}
     }
     
     /** Messenger for communicating with service. */

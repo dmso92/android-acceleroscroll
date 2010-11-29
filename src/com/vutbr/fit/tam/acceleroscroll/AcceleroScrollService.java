@@ -106,6 +106,13 @@ public class AcceleroScrollService extends Service {
      * Set update message FPS. The bundla data "value" should containt required fps
      */
     static final int PREFERENCE_FPS = 5;
+    
+    /**
+     * send all preferences at once to preference activity, the 
+     * key strings are lowercase values of the given preferences
+     * for example max_scroll_speed
+     */
+    static final int PREFERENCE_ALL = 6;
 
     /**
      * Message to clients with the updated values.
@@ -131,6 +138,7 @@ public class AcceleroScrollService extends Service {
                 	break;
                 case MSG_GET_PREFERENCES_VALUE:
                 	getPreferencesValue(msg.arg1, msg.replyTo);
+                	break;
                 case MSG_SET_PREFERENCES_VALUE:
                     setPreferencesValue(msg.arg1, msg.getData());
                     break;
@@ -195,7 +203,7 @@ public class AcceleroScrollService extends Service {
     }
     
     private void getPreferencesValue(int type, Messenger msger){
-    	Log.v(TAG, "Preference value change request.");
+    	Log.v(TAG, "Preference value get request.");
     	Bundle data = new Bundle();
     	Message updateMessage = Message.obtain(null, MSG_GET_PREFERENCES_VALUE, 0, 0);
     	switch(type){
@@ -219,11 +227,20 @@ public class AcceleroScrollService extends Service {
 	    		updateMessage.arg1 = PREFERENCE_FPS;
 	    		data.putFloat("value", this.updateFPS);
 	    		break;
+	    	case PREFERENCE_ALL:
+	    		updateMessage.arg1 = PREFERENCE_ALL;
+	    		data.putFloat("acceleration", scrollManager.getAcceleration());
+	    		data.putFloat("max_scroll_speed", scrollManager.getMaxSpeed());
+	    		data.putFloat("springness", scrollManager.getSpringness());
+	    		data.putFloat("fps", this.updateFPS);
+	    		data.putFloat("threshold", scrollManager.getThreshold());
+	    		break;
     		default:
     			return;
     	}
 
     	try {
+    		updateMessage.setData(data);
     		msger.send(updateMessage);
     	} catch (RemoteException e) {
         	Log.w(TAG, "Client dissappeared without unreginstering.");
@@ -231,7 +248,7 @@ public class AcceleroScrollService extends Service {
     }
     
     private void setPreferencesValue(int type, Bundle data){
-    	Log.v(TAG, "Preference value change request.");
+    	Log.v(TAG, "Preference value change request." + data.getFloat("value"));
 
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
@@ -261,6 +278,7 @@ public class AcceleroScrollService extends Service {
             editor.putFloat("acceleration", this.updateFPS);
     		this.stopTimer();
     		this.startTimer();
+    		break;
     	}
     }
     
