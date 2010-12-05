@@ -1,6 +1,8 @@
 package com.vutbr.fit.tam.acceleroscroll;
 
 
+import java.io.File;
+
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -14,11 +16,14 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -26,15 +31,21 @@ import android.widget.Toast;
 public class AcceleroScrollDemo extends Activity {
 	
 	private static final String TAG = "AcceleroScrollDemo";
+	private static final String TAG1 = "TAG1";
+	private static final int REQUEST_IMAGE_BROWSER = 11;
     private static final int REQUEST_CODE_PREFERENCES = 1;
+    private static final double inch = 25.4;
 	
 	private Bitmap scrollImage;
+	private float xDPI;
+	private float yDPI;
 	private int maxHTScroll = 0;
 	private int maxHBScroll = 0;
 	private int maxWRScroll = 0;
 	private int maxWLScroll = 0;
 	private int currentPosX = 0;
-	private int currentPosY = 0;
+    private int currentPosY = 0;
+	
 	
     /** Called when the activity is first created. */
     @Override
@@ -46,18 +57,47 @@ public class AcceleroScrollDemo extends Activity {
         startService(new Intent(this, AcceleroScrollService.class));
     	doBindService();
     	
+    	Display scrollDisplay = getWindowManager().getDefaultDisplay(); 
+    	int displayWidth = scrollDisplay.getWidth();
+    	int displayHeight = scrollDisplay.getHeight();
+    	
+    	DisplayMetrics metricsDPI = new DisplayMetrics();
+    	scrollDisplay.getMetrics(metricsDPI);
+    	xDPI = metricsDPI.xdpi;
+    	yDPI = metricsDPI.ydpi;
+        	
+    	
+    	
+    	Button prefButton = (Button) findViewById(R.id.prefButton);
+    	prefButton.setWidth(displayWidth/2);
+    	prefButton.setHeight(50);
+        prefButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                Intent prefIntent = new Intent(view.getContext(), AcceleroScrollPreferences.class);
+                startActivityForResult(prefIntent, 0);
+            }
+
+        });
+        
+        Button imageButton = (Button) findViewById(R.id.imageButton);
+        imageButton.setWidth(displayWidth/2);
+    	imageButton.setHeight(50);
+        imageButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                Intent imagesIntent = new Intent(view.getContext(), AcceleroScrollImages.class);
+                startActivityForResult(imagesIntent, REQUEST_IMAGE_BROWSER);
+            }
+
+        });
+    	
     	scrollImage = BitmapFactory.decodeResource(getResources(), R.drawable.android);
     	ImageView scrollView = (ImageView) findViewById(R.id.scrollView);
     	scrollView.setImageBitmap(scrollImage);
     	
-    	Display display = getWindowManager().getDefaultDisplay(); 
-    	int displayWidth = display.getWidth();
-    	int displayHeight = display.getHeight();
-        	
     	maxHTScroll = (int)((scrollImage.getHeight()/2) - (displayHeight /2));
     	maxWRScroll = (int)((scrollImage.getWidth()/2) - (displayWidth /2));
     	maxHBScroll = maxHTScroll * -1;
-    	maxWLScroll = maxWRScroll * -1;
+    	maxWLScroll = maxWRScroll * -1;  
     	
     	//Log.v(TAG, "viewHeight: " + displayHeight + " viewWidth: " + displayWidth + " maxHScroll: " + maxHScroll + " maxWScroll: " + maxWScroll);
     	
@@ -80,7 +120,7 @@ public class AcceleroScrollDemo extends Activity {
     	if(mIsBound) 
     		doUnbindService();
     }
-    
+        
     /** Create options menu */
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
@@ -120,6 +160,32 @@ public class AcceleroScrollDemo extends Activity {
     			doBindService();
     		}
     	}
+
+    	if (requestCode == REQUEST_IMAGE_BROWSER) {
+    		if (resultCode == RESULT_OK) {
+    			Bundle extras = data.getExtras();
+    			String imagePath = extras.getString("imagePath");
+    			
+    			Log.v(TAG1, imagePath);
+    			
+    			File imageFile = new File(imagePath);
+    			if(imageFile.exists()){
+    				Bitmap newImage = BitmapFactory.decodeFile(imagePath);
+    				if (newImage != null){
+    					ImageView myScrollView = (ImageView) findViewById(R.id.scrollView);
+    					myScrollView.setMaxHeight(newImage.getHeight());
+    					myScrollView.setMaxWidth(newImage.getWidth());
+    					myScrollView.setImageBitmap(newImage);
+    				} else {
+    					Log.v(TAG1, "bad image");
+    				}
+    			} else {
+    				//
+    			}
+    		} else {
+    			//Log.v(TAG1, "fakk");
+    		}
+    	}
     }
     
     /** Messenger for communicating with service. */
@@ -143,50 +209,51 @@ public class AcceleroScrollDemo extends Activity {
                 	float[] speed = msg.getData().getFloatArray("updateSpeed");
                 	Log.v(TAG, "Recieved update from service: " + movement[0]+ " " + movement[1] + " [" + speed[0] + ", " + speed[1]+"].");
                 	
-                	int moveX = (int)movement[0];
-                	int moveY = (int)movement[1];
+                	int moveX = (int)((movement[0] / inch) * xDPI);
+                	int moveY = (int)((movement[1] / inch) * yDPI);
+                	Log.v(TAG, "moveX: " + moveX + " moveY: " + moveY);
                 	
                 	int nextX = currentPosX + moveX;
                 	int nextY = currentPosY + moveY;
                 	
                 	if(moveX < 0 && currentPosX != maxWLScroll){
 	                	if (nextX < maxWLScroll){ 
+	                		scrollX = maxWLScroll - currentPosX;
 	                		currentPosX = maxWLScroll;
-	                		scrollX = nextX - maxWLScroll;
 	                	} else {
 	                		currentPosX = nextX;
-	                		scrollX = (int)movement[0];
+	                		scrollX = moveX;
 	                	}
                 	}
                 	if (moveX > 0 && currentPosX != maxWRScroll){
 	                	if (nextX > maxWRScroll){ 
+	                		scrollX = maxWRScroll - currentPosX;
 	                		currentPosX = maxWRScroll;
-	                		scrollX = nextX - maxWRScroll;
 	                	} else {
 	                		currentPosX = nextX;
-	                		scrollX = (int)movement[0];
+	                		scrollX = moveX;
 	                	}
                 	}
                 	
                 	if (moveY < 0 && currentPosY != maxHBScroll){
 	                	if (nextY < maxHBScroll){ 
+	                		scrollY = maxHBScroll - currentPosY;
 	                		currentPosY = maxHBScroll;
-	                		scrollY = nextY - maxHBScroll;
 	                	} else {
 	                		currentPosY = nextY;
-	                		scrollY = (int)movement[1];
+	                		scrollY = moveY;
 	                	}
                 	}
                 	if (moveY > 0 && currentPosY != maxHTScroll){
 	                	if (nextY > maxHTScroll){ 
+	                		scrollY = maxHTScroll - currentPosY;
 	                		currentPosY = maxHTScroll;
-	                		scrollY = nextY - maxHTScroll;
 	                	} else {
 	                		currentPosY = nextY;
-	                		scrollY = (int)movement[1];
+	                		scrollY = moveY;
 	                	}
                 	}
-                	
+                	                	
                 	ImageView scrollViewH = (ImageView) findViewById(R.id.scrollView);
                 	scrollViewH.scrollBy(scrollX, scrollY);
                 	Log.v(TAG, "scrollX: " + scrollX + " scrollY: " + scrollY);

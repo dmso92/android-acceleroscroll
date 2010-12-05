@@ -15,6 +15,7 @@
     
 <service android:name="AcceleroScrollService"></service>
 <activity android:name="AcceleroScrollPreferences" android:launchMode="singleInstance"></activity>
+<activity android:name="AcceleroScrollImages"></activity>
 </application>
     <uses-sdk android:minSdkVersion="8" />
 
