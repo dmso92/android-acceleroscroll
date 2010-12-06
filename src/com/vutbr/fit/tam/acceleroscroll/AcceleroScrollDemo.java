@@ -353,15 +353,15 @@ public class AcceleroScrollDemo extends Activity {
             switch (action){
 	            case MotionEvent.ACTION_DOWN:
 	            	Log.v(TAG2, "action_down");
-	            	isTouch = true;
+	            	isTouch = !isTouch;
 	            	break;
 	
 	            case MotionEvent.ACTION_UP:
-	            	isTouch = false;
+	            	//isTouch = false;
 	            	Log.v(TAG2, "action_up");
 	                break;
 	            case MotionEvent.ACTION_CANCEL:
-	            	isTouch = false;
+	            	//isTouch = false;
 	            	Log.v(TAG2, "action_cancel");
 	                break;
             }
