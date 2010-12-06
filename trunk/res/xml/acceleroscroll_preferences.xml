@@ -27,7 +27,7 @@
 		android:title="@string/title_maxspeed"
 		android:summary="@string/summary_maxspeed"
 		android:persistent="false"
-		ac:intervalMax="150.0"
+		ac:intervalMax="200.0"
 		ac:intervalMin="20.0"
 		android:defaultValue="100.0"
 	/>
@@ -39,6 +39,15 @@
 		ac:intervalMax="30.0"
 		ac:intervalMin="0.5"
 		android:defaultValue="10.0"
+	/>
+	<com.vutbr.fit.tam.acceleroscroll.SeekBarPreference
+		android:key="data_rate"
+		android:title="@string/title_data_rate"
+		android:summary="@string/summary_data_rate"
+		android:persistent="false"
+		ac:intervalMax="30.0"
+		ac:intervalMin="2.0"
+		android:defaultValue="15.0"
 	/>
 <CheckBoxPreference android:key="use_orientation" android:summary="@string/summary_use_orientation" android:persistent="false" android:title="@string/title_use_orientation"></CheckBoxPreference>
 </PreferenceCategory>

@@ -97,4 +97,9 @@ public class EmulatorSensorManager implements AcceleroSensorManagerInterface{
 		}
 
 	};
+	
+	public void setRate(int sensorDelay) {
+		this.sensorDelay = sensorDelay;
+	}
+	
 }

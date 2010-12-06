@@ -12,6 +12,8 @@
 <string name="title_springness">Surface resistance</string>
 <string name="title_maxspeed">Max speed</string>
 <string name="title_threshold">Angle threshold</string>
+<string name="title_data_rate">Data rate</string>
+<string name="summary_data_rate">update rate from service (FPS). Higher rates mean more smooth scrolling and more battery usage. (Note: application restart may be necessary)</string>
 <string name="summary_acceleration"></string>
 <string name="summary_springness">Inverse of preserving momentum.</string>
 <string name="summary_maxspeed"></string>

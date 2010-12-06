@@ -40,14 +40,14 @@ public class AcceleroScrollService extends Service {
      */
     private Timer updateTimer;
     
-    private float updateFPS = 20.0f;
+    private float updateFPS = 15.0f;
     
     /**
      * *********************
      * Just for emulator should be removed from production
      * 
      */
-    private boolean useEmulator = false;
+    private boolean useEmulator = true;
     private AcceleroSensorManagerInterface sensorManager;
     
 
@@ -183,6 +183,15 @@ public class AcceleroScrollService extends Service {
     }
     
     private synchronized void startTimer(){
+    	
+    	int delay = SensorManager.SENSOR_DELAY_UI;
+		if(this.updateFPS < 5) {
+			delay = SensorManager.SENSOR_DELAY_NORMAL;
+		} else if (this.updateFPS > 20) {
+			delay = SensorManager.SENSOR_DELAY_GAME;
+		}
+		this.sensorManager.setRate(delay);
+		
     	updateTimer = new Timer(true);
 		updateTimer.scheduleAtFixedRate(new TimerTask() {
 			
@@ -190,7 +199,7 @@ public class AcceleroScrollService extends Service {
 			public void run() {
 				AcceleroScrollService.this.sendUpdateMessage();
 			}
-		}, (long) (1000/this.updateFPS), 100);
+		}, (long) 100, (long) (1000/this.updateFPS));
     }
     
     private synchronized void stopTimer(){
@@ -303,6 +312,7 @@ public class AcceleroScrollService extends Service {
     		this.updateFPS = Math.max(data.getFloat("value"), 2.0f);
             editor.putFloat("fps", this.updateFPS);
     		this.stopTimer();
+    		
     		this.startTimer();
     		break;
     	}

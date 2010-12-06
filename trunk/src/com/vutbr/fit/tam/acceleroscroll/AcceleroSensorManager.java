@@ -16,7 +16,7 @@ public class AcceleroSensorManager implements AcceleroSensorManagerInterface{
     // you could use an OrientationListener array instead
     // if you plans to use more than one listener
     private AcceleroSensorListener listener;
-    private int sensorDelay = SensorManager.SENSOR_DELAY_UI;
+    private int sensorDelay = SensorManager.SENSOR_DELAY_NORMAL;
     
  
     public void setSensorDelay(int sensorDelay) {
@@ -143,5 +143,10 @@ public class AcceleroSensorManager implements AcceleroSensorManagerInterface{
         }
  
     };
+
+
+	public void setRate(int sensorDelay) {
+		this.sensorDelay = sensorDelay;
+	}
 	
 }

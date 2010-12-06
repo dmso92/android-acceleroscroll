@@ -7,4 +7,5 @@ public interface AcceleroSensorManagerInterface {
 	 public void startListening(Context context,
 				AcceleroSensorListener listener);
 	 public boolean isListening();
+	 public void setRate(int sensorDelay);
 }
