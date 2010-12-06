@@ -10,7 +10,7 @@
 	<SeekBar android:layout_height="wrap_content" 
 				android:layout_width="fill_parent" 
 				android:padding="3dip"
-				android:layout_span="2" android:id="@+id/seekbar">
+				android:layout_span="3" android:id="@+id/seekbar">
 	</SeekBar>
 </TableRow>
 <TableRow android:id="@+id/TableRow02" 
@@ -19,13 +19,22 @@
 	<TextView android:layout_width="wrap_content" 
 				android:layout_height="wrap_content" 
 				android:layout_gravity="left" 
-				android:text="minVal" 
+				android:text="minVal"
+				android:textStyle="normal"
 				android:padding="3dip" android:id="@+id/minText">
+	</TextView>
+	<TextView android:layout_width="wrap_content" 
+				android:layout_height="wrap_content" 
+				android:layout_gravity="center" 
+				android:text="currVal"
+				android:textStyle="bold"
+				android:padding="3dip" android:id="@+id/currText">
 	</TextView>
 	<TextView android:layout_width="wrap_content" 
 				android:layout_height="wrap_content" 
 				android:layout_gravity="right" 
 				android:text="maxVal" 
+				android:textStyle="normal"
 				android:padding="3dip" android:id="@+id/maxText">
 	</TextView>
 </TableRow>
