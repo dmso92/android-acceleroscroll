@@ -75,8 +75,8 @@ public class AcceleroScrollDemo extends Activity {
     	prefButton.setHeight(50);
         prefButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                Intent prefIntent = new Intent(view.getContext(), AcceleroScrollPreferences.class);
-                startActivityForResult(prefIntent, 0);
+            	Intent launchPreferences = new Intent(view.getContext(), AcceleroScrollPreferences.class);
+    			startActivity(launchPreferences);
             }
 
         });
