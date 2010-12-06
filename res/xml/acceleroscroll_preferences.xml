@@ -9,18 +9,18 @@
 		android:title="@string/title_springness"
 		android:summary="@string/summary_springness"
 		android:persistent="false"
-		ac:intervalMax="5.0"
+		ac:intervalMax="6.0"
 		ac:intervalMin="0.1"
-		android:defaultValue="1.5"
+		android:defaultValue="3.0"
 	/>
 	<com.vutbr.fit.tam.acceleroscroll.SeekBarPreference
 		android:key="acceleration"
 		android:title="@string/title_acceleration"
 		android:summary="@string/summary_acceleration"
 		android:persistent="false"
-		ac:intervalMax="5.0"
+		ac:intervalMax="10.0"
 		ac:intervalMin="0.1"
-		android:defaultValue="1.0"
+		android:defaultValue="2.0"
 	/>
 	<com.vutbr.fit.tam.acceleroscroll.SeekBarPreference
 		android:key="maxspeed"
@@ -36,9 +36,9 @@
 		android:title="@string/title_threshold"
 		android:summary="@string/summary_threshold"
 		android:persistent="false"
-		ac:intervalMax="0.2"
-		ac:intervalMin="0.01"
-		android:defaultValue="0.1"
+		ac:intervalMax="30.0"
+		ac:intervalMin="0.5"
+		android:defaultValue="10.0"
 	/>
 <CheckBoxPreference android:key="use_orientation" android:summary="@string/summary_use_orientation" android:persistent="false" android:title="@string/title_use_orientation"></CheckBoxPreference>
 </PreferenceCategory>

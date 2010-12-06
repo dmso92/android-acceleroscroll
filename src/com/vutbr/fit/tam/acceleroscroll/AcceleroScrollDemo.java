@@ -346,7 +346,6 @@ public class AcceleroScrollDemo extends Activity {
     */
     
     OnTouchListener imageTouchListener = new OnTouchListener(){
-        @Override
         public boolean onTouch(View v, MotionEvent event) {
             int action = event.getAction();
 
@@ -475,6 +474,7 @@ public class AcceleroScrollDemo extends Activity {
             			AcceleroScrollService.MSG_RESET_VALUE);
             	mService.send(msg);
             	
+            	/*
                 // Give it some value as an example.
                 Bundle msgBundle = new Bundle();
                 msgBundle.putFloat("value", 2.0f);
@@ -483,7 +483,7 @@ public class AcceleroScrollDemo extends Activity {
                         AcceleroScrollService.PREFERENCE_ACCELERATION, 0);
                 msg.setData(msgBundle);
                 mService.send(msg);
-
+				*/
                 msg = Message.obtain(null,
                         AcceleroScrollService.MSG_REGISTER_CLIENT);
                 msg.replyTo = mMessenger;
