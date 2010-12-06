@@ -6,6 +6,7 @@ import android.hardware.SensorListener;
 import org.openintents.sensorsimulator.hardware.SensorManagerSimulator;
 
 
+@SuppressWarnings("deprecation")
 public class EmulatorSensorManager implements AcceleroSensorManagerInterface{
 	private SensorManagerSimulator sensorManager;
 	private AcceleroSensorListener listener;
@@ -23,7 +24,8 @@ public class EmulatorSensorManager implements AcceleroSensorManagerInterface{
     public void stopListening() {
     	running = false;
     	try {
-    		if (sensorManager != null && sensorEventListener != null) {
+
+    		if(sensorManager != null && sensorEventListener != null) {
     			sensorManager.unregisterListener(sensorEventListener);
     			sensorManager.disconnectSimulator();
     		}
@@ -40,7 +42,8 @@ public class EmulatorSensorManager implements AcceleroSensorManagerInterface{
 		sensorManager = SensorManagerSimulator.getSystemService(context, Context.SENSOR_SERVICE);
 		sensorManager.connectSimulator();
 
-		running = sensorManager.registerListener(sensorEventListener, SensorManager.SENSOR_ACCELEROMETER,
+		running = sensorManager.registerListener(sensorEventListener, 
+				SensorManager.SENSOR_ACCELEROMETER | SensorManager.SENSOR_MAGNETIC_FIELD,
 				sensorDelay);
 		this.listener = listener;
 	}
@@ -49,6 +52,7 @@ public class EmulatorSensorManager implements AcceleroSensorManagerInterface{
 		this.sensorDelay = sensorDelay;
 	}
 
+	@SuppressWarnings("deprecation")
 	private SensorListener sensorEventListener = 
 		new SensorListener() {
 
@@ -67,24 +71,28 @@ public class EmulatorSensorManager implements AcceleroSensorManagerInterface{
 			// so the manager precision won't depends 
 			// on the AccelerometerListener implementation
 			// processing time
-			now = System.nanoTime();
-
-			x = values[0];
-			y = values[1];
-			z = values[2];
-
-			// if not interesting in shake events
-			// just remove the whole if then else bloc
-			if (lastUpdate == 0) {
-				lastUpdate = now;
-			} else {
-				timeDiff = now - lastUpdate;
-				if (timeDiff > 0) {
+			if(sensor == SensorManager.SENSOR_ACCELEROMETER){
+				now = System.nanoTime();
+	
+				x = values[0];
+				y = values[1];
+				z = values[2];
+	
+				// if not interesting in shake events
+				// just remove the whole if then else bloc
+				if (lastUpdate == 0) {
 					lastUpdate = now;
-					//trigger change event
-					listener.onAccelerationChanged(x, y, z, timeDiff);
-					return;
+				} else {
+					timeDiff = now - lastUpdate;
+					if (timeDiff > 0) {
+						lastUpdate = now;
+						//trigger change event
+						listener.onAccelerationChanged(x, y, z, timeDiff);
+						return;
+					}
 				}
+			} else if(sensor == SensorManager.SENSOR_MAGNETIC_FIELD){
+				listener.onMagSensorChanged(values[0], values[1], values[2]);
 			}
 		}
 

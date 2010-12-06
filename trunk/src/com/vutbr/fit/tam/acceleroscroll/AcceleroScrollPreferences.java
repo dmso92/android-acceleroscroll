@@ -10,6 +10,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
@@ -41,6 +42,9 @@ public class AcceleroScrollPreferences extends PreferenceActivity
         seek.setOnPreferenceChangeListener(this);
         Log.v(TAG, "Setting change listeners");
         
+        CheckBoxPreference use_orient = (CheckBoxPreference) this.findPreference("use_orientation");
+        use_orient.setOnPreferenceChangeListener(this);
+        
         startService(new Intent(this, AcceleroScrollService.class));
     	doBindService();
     }
@@ -48,28 +52,40 @@ public class AcceleroScrollPreferences extends PreferenceActivity
 	public boolean onPreferenceChange(Preference preference, Object newValue) {
 		String key = preference.getKey();
 		if(key.equals("springness")) {
-			this.sendValue(AcceleroScrollService.PREFERENCE_SPRINGNESS, newValue);
+			this.sendFloat(AcceleroScrollService.PREFERENCE_SPRINGNESS, newValue);
 		} else if(key.equals("acceleration")) {
-			this.sendValue(AcceleroScrollService.PREFERENCE_ACCELERATION, newValue);
+			this.sendFloat(AcceleroScrollService.PREFERENCE_ACCELERATION, newValue);
 		} else if(key.equals("maxspeed")) {
-			this.sendValue(AcceleroScrollService.PREFERENCE_MAX_SCROLL_SPEED, newValue);
+			this.sendFloat(AcceleroScrollService.PREFERENCE_MAX_SCROLL_SPEED, newValue);
 		} else if(key.equals("threshold")) {
-			this.sendValue(AcceleroScrollService.PREFERENCE_THRESHOLD, newValue);
+			this.sendFloat(AcceleroScrollService.PREFERENCE_THRESHOLD, newValue);
+		} else if(key.equals("use_orientation")) {
+			this.sendBoolean(AcceleroScrollService.PREFERENCE_USE_HAND_BASED, newValue);
 		}
 		return true;
 	}
 	
+	private void sendBoolean(int type, Object newValue){
+		Bundle msgBundle = new Bundle();
+		msgBundle.putBoolean("value", (Boolean) newValue);
+		sendValue(type, msgBundle);
+	}
+	
+	private void sendFloat(int type, Object newValue){
+		Bundle msgBundle = new Bundle();
+		msgBundle.putFloat("value", (Float) newValue);
+		sendValue(type, msgBundle);
+	}
+	
 	//send the new value to the service
-	private void sendValue(int type, Object newValue){
+	private void sendValue(int type, Bundle data){
 		Log.v(TAG, "Sending changed value to service");
 		if(mIsBound){
 			try {
-				Bundle msgBundle = new Bundle();
-				msgBundle.putFloat("value", (Float) newValue);
 				Message msg = Message.obtain(null,
 				        AcceleroScrollService.MSG_SET_PREFERENCES_VALUE,
 				        type, 0);
-				msg.setData(msgBundle);
+				msg.setData(data);
 				mService.send(msg);
 			} catch (RemoteException e) {
 				Toast.makeText(AcceleroScrollPreferences.this, R.string.preferences_set_error,
@@ -124,6 +140,10 @@ public class AcceleroScrollPreferences extends PreferenceActivity
                     seek.setValue(data.getFloat("acceleration"));
                     seek = (SeekBarPreference) AcceleroScrollPreferences.this.findPreference("threshold");
                     seek.setValue(data.getFloat("threshold"));
+                    
+                    CheckBoxPreference use_orient = (CheckBoxPreference) AcceleroScrollPreferences.this.findPreference("use_orientation");
+                    use_orient.setChecked(data.getBoolean("use_hand_based"));
+                    
                     Log.v(TAG, "Got current values from service.");
             		break;
                 default:

@@ -19,6 +19,8 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.widget.Toast;
 import android.util.Log;
+import android.view.Display;
+import android.view.WindowManager;
 
 public class AcceleroScrollService extends Service {
 	
@@ -101,18 +103,23 @@ public class AcceleroScrollService extends Service {
     /**
      * Set phone gui orientation. The bundle data should define orientation
      */
-    static final int PREFERENCE_PORTRAIT = 4;
+    static final int PREFERENCE_ORIENTATION = 4;
     /**
      * Set update message FPS. The bundla data "value" should containt required fps
      */
     static final int PREFERENCE_FPS = 5;
+    /**
+     * Set if Phone based/hand based method should be used.
+     * Default is phone based method
+     */
+    static final int PREFERENCE_USE_HAND_BASED = 6;
     
     /**
      * send all preferences at once to preference activity, the 
      * key strings are lowercase values of the given preferences
      * for example max_scroll_speed
      */
-    static final int PREFERENCE_ALL = 6;
+    static final int PREFERENCE_ALL = 7;
 
     /**
      * Message to clients with the updated values.
@@ -164,6 +171,13 @@ public class AcceleroScrollService extends Service {
     		Log.w(TAG, "Client trying to reconnect without unregistering first.");
     		return;
     	}
+    	/* First, get the Display from the WindowManager */  
+    	Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();  
+    	  
+    	/* Now we can retrieve all display-related infos */  
+    	int orientation = display.getRotation();
+    	scrollManager.setOrientation(orientation);
+    	
         mClients.add(msger);
         Log.v(TAG, "Client added." + mClients.size());
     }
@@ -231,6 +245,10 @@ public class AcceleroScrollService extends Service {
 	    		updateMessage.arg1 = PREFERENCE_FPS;
 	    		data.putFloat("value", this.updateFPS);
 	    		break;
+	    	case PREFERENCE_USE_HAND_BASED:
+	    		updateMessage.arg1 = PREFERENCE_USE_HAND_BASED;
+	    		data.putBoolean("value", scrollManager.isUseHandBased());
+	    		break;
 	    	case PREFERENCE_ALL:
 	    		updateMessage.arg1 = PREFERENCE_ALL;
 	    		data.putFloat("acceleration", scrollManager.getAcceleration());
@@ -238,6 +256,7 @@ public class AcceleroScrollService extends Service {
 	    		data.putFloat("springness", scrollManager.getSpringness());
 	    		data.putFloat("fps", this.updateFPS);
 	    		data.putFloat("threshold", scrollManager.getThreshold());
+	    		data.putBoolean("use_hand_based", scrollManager.isUseHandBased());
 	    		break;
     		default:
     			return;
@@ -274,9 +293,12 @@ public class AcceleroScrollService extends Service {
     		scrollManager.setThreshold(data.getFloat("value"));
             editor.putFloat("threshold", scrollManager.getThreshold());
     		break;
-    	case PREFERENCE_PORTRAIT:
-    		scrollManager.setPortrait(data.getInt("value"));
+    	case PREFERENCE_ORIENTATION:
+    		scrollManager.setOrientation(data.getInt("value"));
     		break;
+    	case PREFERENCE_USE_HAND_BASED:
+    		scrollManager.setUseHandBased(data.getBoolean("value"));
+    		editor.putBoolean("use_hand_based", scrollManager.isUseHandBased());
     	case PREFERENCE_FPS:
     		this.updateFPS = Math.max(data.getFloat("value"), 2.0f);
             editor.putFloat("acceleration", this.updateFPS);
@@ -292,7 +314,8 @@ public class AcceleroScrollService extends Service {
             try {
             	float[] movement = new float[2];
             	float[] speed = new float[2];
-            	scrollManager.getMovement(movement);
+            	//TODO remove after disconnecting emulator
+            	scrollManager.getMovement(movement, useEmulator);
             	if(Math.max(Math.abs(movement[0]), Math.abs(movement[1])) < 1e-3){
             		return;
             	}
@@ -336,6 +359,7 @@ public class AcceleroScrollService extends Service {
         scrollManager.setMaxSpeed(settings.getFloat("max_scroll_speed", scrollManager.getMaxSpeed()));
         scrollManager.setSpringness(settings.getFloat("springness", scrollManager.getSpringness()));
         scrollManager.setThreshold(settings.getFloat("threshold", scrollManager.getThreshold()));
+        scrollManager.setUseHandBased(settings.getBoolean("use_hand_based", false));
         this.updateFPS = settings.getFloat("acceleration", this.updateFPS);
     }
 
