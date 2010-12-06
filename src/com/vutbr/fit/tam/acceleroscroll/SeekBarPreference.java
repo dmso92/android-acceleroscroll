@@ -10,6 +10,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.util.Log;
+import java.util.Formatter;
 
 
 public class SeekBarPreference extends DialogPreference implements
@@ -21,7 +22,8 @@ public class SeekBarPreference extends DialogPreference implements
 	private float mValue = 0.0f, mMax, mMin, mDefault;
 	private TextView currVal;
 	private SeekBar mSeekBar;
-	
+	private Formatter formatter;
+	private StringBuilder sb;
 	
 	
 	public SeekBarPreference(Context context, AttributeSet attrs) {
@@ -30,10 +32,14 @@ public class SeekBarPreference extends DialogPreference implements
 		this.mDefault = attrs.getAttributeFloatValue(androidns, "defaultValue", 0);
 		this.mMin = attrs.getAttributeFloatValue(myns, "intervalMin", 0.0f);
 		this.mMax = attrs.getAttributeFloatValue(myns, "intervalMax", 10.0f);
+		sb = new StringBuilder();
+		// Send all output to the Appendable object sb
+		formatter = new Formatter(sb);
 	}
 	
 	@Override
 	protected View onCreateDialogView(){
+
 		LayoutInflater inflater = (LayoutInflater) this.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		TableLayout layout = (TableLayout) inflater.inflate(R.layout.preferences_seekbar, null);
 		mSeekBar = (SeekBar) layout.findViewById(R.id.seekbar);
@@ -45,8 +51,10 @@ public class SeekBarPreference extends DialogPreference implements
 		TextView max = (TextView) layout.findViewById(R.id.maxText);
 		max.setText(Float.toString(mMax));
 		
-		if (shouldPersist())
+		if (shouldPersist()){
 		      mValue = getPersistedFloat(mDefault);
+		      Log.v(TAG, "persisted");
+		}
 
 		currVal = (TextView) layout.findViewById(R.id.currText);
 		currVal.setText(Float.toString(mValue));
@@ -74,15 +82,18 @@ public class SeekBarPreference extends DialogPreference implements
 	protected void onSetInitialValue(boolean restore, Object defaultValue)  
 	{
 	  super.onSetInitialValue(restore, defaultValue);
-	  if (restore) 
+	  if (restore) {
 	    mValue = shouldPersist() ? getPersistedFloat(mDefault) : 0;
+	  }
 	  else 
 	    mValue = (Float)defaultValue;
 	}
 
 
 	public void onProgressChanged(SeekBar arg0, int arg1, boolean arg2) {
-		currVal.setText(Float.toString(this.getValueFromPercent(arg1)));
+		sb.delete(0, sb.length());
+		formatter.format("%.3f", this.getValueFromPercent(arg1));
+		currVal.setText(sb.toString());
 	}
 
 	public void onStartTrackingTouch(SeekBar seekBar) {
@@ -90,18 +101,20 @@ public class SeekBarPreference extends DialogPreference implements
 	}
 
 	public void onStopTrackingTouch(SeekBar seekBar) {
-		mValue = this.getValueFromPercent(seekBar.getProgress());
+		//do nothing
 		
 	}
 	
 	@Override
 	protected void onDialogClosed(boolean positiveResult){
-		Log.v(TAG, "Dialog closed with result: " + positiveResult);
 		if(positiveResult){
+			mValue = this.getValueFromPercent(mSeekBar.getProgress());
 			if(shouldPersist()){
 				persistFloat(mValue);
 			}
 			callChangeListener(new Float(mValue));	
+		} else {
+			this.setValue(mValue);
 		}
 	}
 
