@@ -22,7 +22,7 @@ public class AcceleroScrollImages extends ListActivity {
 	
 	private List<String> item = null;
 	private List<String> path = null;
-	private String root="/";
+	private String root="/sdcard/";
 	private TextView myPath;
 	 
 	    /** Called when the activity is first created. */

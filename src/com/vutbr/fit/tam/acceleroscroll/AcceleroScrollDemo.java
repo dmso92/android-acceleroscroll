@@ -37,6 +37,8 @@ public class AcceleroScrollDemo extends Activity {
     private static final double inch = 25.4;
 	
 	private Bitmap scrollImage;
+	private int displayWidth;
+	private int displayHeight;
 	private float xDPI;
 	private float yDPI;
 	private int maxHTScroll = 0;
@@ -58,8 +60,8 @@ public class AcceleroScrollDemo extends Activity {
     	doBindService();
     	
     	Display scrollDisplay = getWindowManager().getDefaultDisplay(); 
-    	int displayWidth = scrollDisplay.getWidth();
-    	int displayHeight = scrollDisplay.getHeight();
+    	displayWidth = scrollDisplay.getWidth();
+    	displayHeight = scrollDisplay.getHeight();
     	
     	DisplayMetrics metricsDPI = new DisplayMetrics();
     	scrollDisplay.getMetrics(metricsDPI);
@@ -109,6 +111,8 @@ public class AcceleroScrollDemo extends Activity {
     	super.onResume();
     	if(!mIsBound){
     		startService(new Intent(this, AcceleroScrollService.class));
+    		ImageView scrollView = (ImageView) findViewById(R.id.scrollView);
+        	scrollView.setImageBitmap(scrollImage);
     		doBindService();
     	}
     }
@@ -139,6 +143,21 @@ public class AcceleroScrollDemo extends Activity {
     			//Make it a subActivity
     			//startActivityForResult(launchPreferences, REQUEST_CODE_PREFERENCES);
     			startActivity(launchPreferences);
+    			return true;
+    		case R.id.imageLoader:
+    			Intent imagesIntent = new Intent().setClass(this, AcceleroScrollImages.class);
+                startActivityForResult(imagesIntent, REQUEST_IMAGE_BROWSER);
+    			return true;
+    		case R.id.resetImage:
+    			Bitmap defaultImage = BitmapFactory.decodeResource(getResources(), R.drawable.android);
+    	    	ImageView scrollView = (ImageView) findViewById(R.id.scrollView);
+    	    	scrollView.setImageBitmap(defaultImage);
+    	    	
+    	    	maxHTScroll = (int)((defaultImage.getHeight()/2) - (displayHeight /2));
+    	    	maxWRScroll = (int)((defaultImage.getWidth()/2) - (displayWidth /2));
+    	    	maxHBScroll = maxHTScroll * -1;
+    	    	maxWLScroll = maxWRScroll * -1;
+    	    	scrollImage = defaultImage;
     			return true;
     		default:
     			return super.onOptionsItemSelected(item);
@@ -173,9 +192,12 @@ public class AcceleroScrollDemo extends Activity {
     				Bitmap newImage = BitmapFactory.decodeFile(imagePath);
     				if (newImage != null){
     					ImageView myScrollView = (ImageView) findViewById(R.id.scrollView);
-    					myScrollView.setMaxHeight(newImage.getHeight());
-    					myScrollView.setMaxWidth(newImage.getWidth());
+    					maxHTScroll = (int)((newImage.getHeight()/2) - (displayHeight /2));
+    			    	maxWRScroll = (int)((newImage.getWidth()/2) - (displayWidth /2));
+    			    	maxHBScroll = maxHTScroll * -1;
+    			    	maxWLScroll = maxWRScroll * -1;
     					myScrollView.setImageBitmap(newImage);
+    					scrollImage = newImage;
     				} else {
     					Log.v(TAG1, "bad image");
     				}
