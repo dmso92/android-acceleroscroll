@@ -8,6 +8,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -37,14 +38,19 @@ public class AcceleroScrollDemo extends Activity {
     private static final double inch = 25.4;
 	
 	private Bitmap scrollImage;
+	private boolean isDefaultImage = true;
+	private String currentImagePath;
+	
 	private int displayWidth;
 	private int displayHeight;
 	private float xDPI;
 	private float yDPI;
+	
 	private int maxHTScroll = 0;
 	private int maxHBScroll = 0;
 	private int maxWRScroll = 0;
 	private int maxWLScroll = 0;
+	
 	private int currentPosX = 0;
     private int currentPosY = 0;
 	
@@ -52,8 +58,19 @@ public class AcceleroScrollDemo extends Activity {
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        
         super.onCreate(savedInstanceState);
+        
+        /*  
+        if (savedInstanceState != null){
+        	Log.v(TAG1, "notnull");
+	        isDefaultImage = savedInstanceState.getBoolean("defaultImage", true);
+	     }
+        */
+        
+        // Get the between instance stored values
+        SharedPreferences imagePreferences = getPreferences(MODE_PRIVATE);
+        isDefaultImage = imagePreferences.getBoolean("defaultImage", true);
+        
         
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN); 
@@ -96,15 +113,38 @@ public class AcceleroScrollDemo extends Activity {
 
         });*/
     	
-    	scrollImage = BitmapFactory.decodeResource(getResources(), R.drawable.android);
+    	if (isDefaultImage){
+	    	scrollImage = BitmapFactory.decodeResource(getResources(), R.drawable.android);	    
+	    	Log.v(TAG1, "isdefault");
+    	} else {
+    		
+    		currentImagePath = imagePreferences.getString("imagePath", "/mnt/sdcard/droid.png");
+    		scrollImage = BitmapFactory.decodeFile(currentImagePath);
+
+	      	currentPosX = imagePreferences.getInt("currentPosX", 0);
+	      	currentPosY = imagePreferences.getInt("currentPosY", 0);
+    		
+    		/*
+    		currentImagePath = savedInstanceState.getString("imagePath");
+    		scrollImage = BitmapFactory.decodeFile(currentImagePath);
+
+	      	currentPosX = savedInstanceState.getInt("currentPosX");
+	      	currentPosY = savedInstanceState.getInt("currentPosY");
+	      	*/
+	      	
+	      	Log.v(TAG1, "okok");
+    	}
+    	
+   	
     	ImageView scrollView = (ImageView) findViewById(R.id.scrollView);
     	scrollView.setImageBitmap(scrollImage);
     	
-    	maxHTScroll = (int)((scrollImage.getHeight()/2) - (displayHeight /2));
-    	maxWRScroll = (int)((scrollImage.getWidth()/2) - (displayWidth /2));
-    	maxHBScroll = maxHTScroll * -1;
-    	maxWLScroll = maxWRScroll * -1;  
-    	
+	    scrollView.scrollBy(currentPosX, currentPosY);
+	    
+	    maxHTScroll = (int)((scrollImage.getHeight()/2) - (displayHeight /2));
+	    maxWRScroll = (int)((scrollImage.getWidth()/2) - (displayWidth /2));
+	    maxHBScroll = maxHTScroll * -1;
+	    maxWLScroll = maxWRScroll * -1;  
     	//Log.v(TAG, "viewHeight: " + displayHeight + " viewWidth: " + displayWidth + " maxHScroll: " + maxHScroll + " maxWScroll: " + maxWScroll);
     	
     }
@@ -127,6 +167,18 @@ public class AcceleroScrollDemo extends Activity {
     	super.onPause();
     	if(mIsBound) 
     		doUnbindService();
+    	
+    	 // Store values between instances here
+    	SharedPreferences imagePreferences = getPreferences(MODE_PRIVATE);
+    	SharedPreferences.Editor editorIP = imagePreferences.edit();
+    	
+    	editorIP.putBoolean("defaultImage", isDefaultImage);
+    	editorIP.putString("imagePath", currentImagePath);
+    	editorIP.putInt("currentPosX", currentPosX);
+    	editorIP.putInt("currentPosY", currentPosY);
+    	
+    	editorIP.commit();
+    	
     }
         
     /** Create options menu */
@@ -155,13 +207,17 @@ public class AcceleroScrollDemo extends Activity {
     		case R.id.resetImage:
     			Bitmap defaultImage = BitmapFactory.decodeResource(getResources(), R.drawable.android);
     	    	ImageView scrollView = (ImageView) findViewById(R.id.scrollView);
+    	    	scrollView.scrollBy(currentPosX * (-1), currentPosY * (-1));
     	    	scrollView.setImageBitmap(defaultImage);
     	    	
     	    	maxHTScroll = (int)((defaultImage.getHeight()/2) - (displayHeight /2));
     	    	maxWRScroll = (int)((defaultImage.getWidth()/2) - (displayWidth /2));
     	    	maxHBScroll = maxHTScroll * -1;
     	    	maxWLScroll = maxWRScroll * -1;
+    	    	
     	    	scrollImage = defaultImage;
+    	    	isDefaultImage = true;
+    	    	
     			return true;
     		default:
     			return super.onOptionsItemSelected(item);
@@ -211,6 +267,9 @@ public class AcceleroScrollDemo extends Activity {
     					currentPosY = 0;
     					
     					scrollImage = newImage;
+    					currentImagePath = imagePath;
+    					isDefaultImage = false;
+    					
     				} else {
     					Log.v(TAG1, "bad image");
     				}
@@ -222,6 +281,56 @@ public class AcceleroScrollDemo extends Activity {
     		}
     	}
     }
+    
+    /*
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+      // Save UI state changes to the savedInstanceState.
+      // This bundle will be passed to onCreate if the process is
+      // killed and restarted.
+    	if(isDefaultImage){
+    		savedInstanceState.putBoolean("defaultImage", true);	
+    		Log.v(TAG1, "isdefaultimage");
+    	} else {
+    		Log.v(TAG1, currentImagePath + " " + currentPosX + " " + currentPosY);
+    		savedInstanceState.putBoolean("defaultImage", false);
+    		savedInstanceState.putString("imagePath", currentImagePath);
+    		savedInstanceState.putInt("currentPosX", currentPosX);
+    		savedInstanceState.putInt("currentPosY", currentPosY);
+    	}
+      
+      super.onSaveInstanceState(savedInstanceState);
+    }
+    */
+    
+    
+    /*
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+      super.onRestoreInstanceState(savedInstanceState);
+      // Restore UI state from the savedInstanceState.
+      // This bundle has also been passed to onCreate.
+      if (!savedInstanceState.getBoolean("defaultImage")){
+    	  Bitmap currentImage = BitmapFactory.decodeFile(savedInstanceState.getString("imagePath"));
+    	  ImageView myScrollView = (ImageView) findViewById(R.id.scrollView);
+			
+    	  maxHTScroll = (int)((currentImage.getHeight()/2) - (displayHeight /2));
+    	  maxWRScroll = (int)((currentImage.getWidth()/2) - (displayWidth /2));
+    	  maxHBScroll = maxHTScroll * -1;
+    	  maxWLScroll = maxWRScroll * -1;
+    	  
+    	  currentPosX = savedInstanceState.getInt("currentPosX");
+    	  currentPosY = savedInstanceState.getInt("currentPosY");
+    	  myScrollView.scrollBy(currentPosX, currentPosY);
+	    	
+    	  myScrollView.setImageBitmap(currentImage);
+    	  myScrollView.setScaleType(ImageView.ScaleType.CENTER);
+    	  myScrollView.requestLayout();
+    	  
+    	  scrollImage = currentImage;
+      }
+    }
+    */
     
     /** Messenger for communicating with service. */
     Messenger mService = null;
