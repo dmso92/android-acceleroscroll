@@ -3,6 +3,7 @@ package com.vutbr.fit.tam.acceleroscroll;
 import android.util.Log;
 import android.view.Surface;
 import android.hardware.SensorManager;
+import java.lang.Math;
 
 public class ScrollManager implements AcceleroSensorListener {
 	 
@@ -14,8 +15,8 @@ public class ScrollManager implements AcceleroSensorListener {
 	private float threshold = 0.1f;
 	private float minSpeed = 30.0f;
 	private float maxSpeed = 100.0f;
-	private float acceleration = 1.0f;
-	private float springness = 1.5f;
+	private float acceleration = 2.0f;
+	private float springness = 3.0f;
 	
 	private static int HISTORY_SIZE = 2;
 	private float[] accelerationHistory = new float[HISTORY_SIZE*3];
@@ -71,11 +72,11 @@ public class ScrollManager implements AcceleroSensorListener {
 	}
 	
 	public float getThreshold() {
-		return threshold;
+		return (float) Math.toDegrees(threshold);
 	}
 
 	public void setThreshold(float threshold) {
-		this.threshold = threshold;
+		this.threshold = (float) Math.toRadians(threshold);
 	}
 
 	public float getMinSpeed() {

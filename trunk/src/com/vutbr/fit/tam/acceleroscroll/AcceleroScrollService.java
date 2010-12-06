@@ -47,7 +47,7 @@ public class AcceleroScrollService extends Service {
      * Just for emulator should be removed from production
      * 
      */
-    private boolean useEmulator = true;
+    private boolean useEmulator = false;
     private AcceleroSensorManagerInterface sensorManager;
     
 
@@ -301,7 +301,7 @@ public class AcceleroScrollService extends Service {
     		editor.putBoolean("use_hand_based", scrollManager.isUseHandBased());
     	case PREFERENCE_FPS:
     		this.updateFPS = Math.max(data.getFloat("value"), 2.0f);
-            editor.putFloat("acceleration", this.updateFPS);
+            editor.putFloat("fps", this.updateFPS);
     		this.stopTimer();
     		this.startTimer();
     		break;
@@ -360,7 +360,7 @@ public class AcceleroScrollService extends Service {
         scrollManager.setSpringness(settings.getFloat("springness", scrollManager.getSpringness()));
         scrollManager.setThreshold(settings.getFloat("threshold", scrollManager.getThreshold()));
         scrollManager.setUseHandBased(settings.getBoolean("use_hand_based", false));
-        this.updateFPS = settings.getFloat("acceleration", this.updateFPS);
+        this.updateFPS = settings.getFloat("fps", this.updateFPS);
     }
 
     @Override
