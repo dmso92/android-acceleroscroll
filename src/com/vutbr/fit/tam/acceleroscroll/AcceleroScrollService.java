@@ -280,6 +280,7 @@ public class AcceleroScrollService extends Service {
     		this.startTimer();
     		break;
     	}
+    	editor.commit();
     }
     
     private synchronized void sendUpdateMessage(){

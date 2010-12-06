@@ -9,10 +9,12 @@ import android.widget.TextView;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.util.Log;
 
 
 public class SeekBarPreference extends DialogPreference implements
 		OnSeekBarChangeListener {
+	private static final String TAG = "SeekBarPreference";
 	private static final String androidns="http://schemas.android.com/apk/res/android";
 	private static final String myns="http://schemas.android.com/apk/res/com.vutbr.fit.tam.acceleroscroll";
 	
@@ -86,10 +88,18 @@ public class SeekBarPreference extends DialogPreference implements
 
 	public void onStopTrackingTouch(SeekBar seekBar) {
 		mValue = this.getValueFromPercent(seekBar.getProgress());
-		if(shouldPersist()){
-			persistFloat(mValue);
+		
+	}
+	
+	@Override
+	protected void onDialogClosed(boolean positiveResult){
+		Log.v(TAG, "Dialog closed with result: " + positiveResult);
+		if(positiveResult){
+			if(shouldPersist()){
+				persistFloat(mValue);
+			}
+			callChangeListener(new Float(mValue));	
 		}
-		callChangeListener(new Float(mValue));
 	}
 
 	  public void setMax(float max) { mMax = max; }
