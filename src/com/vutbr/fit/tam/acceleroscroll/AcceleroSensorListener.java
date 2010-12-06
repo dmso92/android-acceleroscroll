@@ -9,4 +9,5 @@ public interface AcceleroSensorListener {
 	 * @param timeDiff - time since the last change
 	 */
 	public void onAccelerationChanged(float x, float y, float z, float timeDiff);
+	public void onMagSensorChanged(float field1, float field2, float field3);
 }

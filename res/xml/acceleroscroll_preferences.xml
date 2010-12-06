@@ -40,5 +40,6 @@
 		ac:intervalMin="0.01"
 		android:defaultValue="0.1"
 	/>
+<CheckBoxPreference android:key="use_orientation" android:summary="@string/summary_use_orientation" android:persistent="false" android:title="@string/title_use_orientation"></CheckBoxPreference>
 </PreferenceCategory>
 </PreferenceScreen>
