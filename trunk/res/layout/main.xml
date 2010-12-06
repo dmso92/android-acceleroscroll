@@ -4,6 +4,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:background="#999999"
+    android:scrollbars="horizontal|vertical"
     >
 <!--
 <TableLayout android:id="@+id/menu"
@@ -34,6 +35,7 @@
    	android:layout_width="wrap_content"
    	android:layout_height="wrap_content"
    	android:scaleType="center"
+   	android:scrollbars="horizontal|vertical"
    />
    
 </LinearLayout>

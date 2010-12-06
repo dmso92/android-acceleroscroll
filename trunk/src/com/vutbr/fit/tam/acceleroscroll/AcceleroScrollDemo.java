@@ -208,6 +208,9 @@ public class AcceleroScrollDemo extends Activity {
     			Bitmap defaultImage = BitmapFactory.decodeResource(getResources(), R.drawable.android);
     	    	ImageView scrollView = (ImageView) findViewById(R.id.scrollView);
     	    	scrollView.scrollBy(currentPosX * (-1), currentPosY * (-1));
+    	    	currentPosX = 0;
+    	    	currentPosY = 0;
+    	    	
     	    	scrollView.setImageBitmap(defaultImage);
     	    	
     	    	maxHTScroll = (int)((defaultImage.getHeight()/2) - (displayHeight /2));
