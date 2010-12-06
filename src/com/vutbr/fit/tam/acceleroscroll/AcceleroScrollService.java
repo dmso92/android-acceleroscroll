@@ -160,6 +160,10 @@ public class AcceleroScrollService extends Service {
     		//start the timer to add send update to clients
     		this.startTimer();
     	}
+    	if(mClients.contains(msger)){
+    		Log.w(TAG, "Client trying to reconnect without unregistering first.");
+    		return;
+    	}
         mClients.add(msger);
         Log.v(TAG, "Client added." + mClients.size());
     }

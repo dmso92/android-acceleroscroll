@@ -19,6 +19,7 @@ public class SeekBarPreference extends DialogPreference implements
 	private static final String myns="http://schemas.android.com/apk/res/com.vutbr.fit.tam.acceleroscroll";
 	
 	private float mValue = 0.0f, mMax, mMin, mDefault;
+	private TextView currVal;
 	private SeekBar mSeekBar;
 	
 	
@@ -46,7 +47,9 @@ public class SeekBarPreference extends DialogPreference implements
 		
 		if (shouldPersist())
 		      mValue = getPersistedFloat(mDefault);
-		
+
+		currVal = (TextView) layout.findViewById(R.id.currText);
+		currVal.setText(Float.toString(mValue));
 		mSeekBar.setProgress(this.getProgressPercent());
 		
 		return layout;
@@ -79,7 +82,7 @@ public class SeekBarPreference extends DialogPreference implements
 
 
 	public void onProgressChanged(SeekBar arg0, int arg1, boolean arg2) {
-		//do nothing
+		currVal.setText(Float.toString(this.getValueFromPercent(arg1)));
 	}
 
 	public void onStartTrackingTouch(SeekBar seekBar) {

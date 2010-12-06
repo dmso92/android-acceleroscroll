@@ -142,14 +142,16 @@ public class ScrollManager implements AcceleroSensorListener {
 		
 		//first fill the history before giving any data away
 		if(onStart){
+			Log.v(TAG, x+" "+y+" "+z+" onstart");
 			synchronized (this) {
-				accelerationHistory[historyIndex] = x;
-				accelerationHistory[historyIndex+1] = y;
-				accelerationHistory[historyIndex+2] = z;
+				accelerationHistory[historyIndex*3] = x;
+				accelerationHistory[historyIndex*3+1] = y;
+				accelerationHistory[historyIndex*3+2] = z;
 				historyIndex++;
 				if(historyIndex == HISTORY_SIZE) {
 					historyIndex = 0;
 					onStart = false;
+					Log.v(TAG, "reset called from onstart");
 					this.resetState();
 				}
 			}
