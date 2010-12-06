@@ -22,8 +22,8 @@ import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -54,6 +54,10 @@ public class AcceleroScrollDemo extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         
         super.onCreate(savedInstanceState);
+        
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN); 
+        
         setContentView(R.layout.main);
         
         startService(new Intent(this, AcceleroScrollService.class));
@@ -70,7 +74,7 @@ public class AcceleroScrollDemo extends Activity {
         	
     	
     	
-    	Button prefButton = (Button) findViewById(R.id.prefButton);
+    	/*Button prefButton = (Button) findViewById(R.id.prefButton);
     	prefButton.setWidth(displayWidth/2);
     	prefButton.setHeight(50);
         prefButton.setOnClickListener(new View.OnClickListener() {
@@ -90,7 +94,7 @@ public class AcceleroScrollDemo extends Activity {
                 startActivityForResult(imagesIntent, REQUEST_IMAGE_BROWSER);
             }
 
-        });
+        });*/
     	
     	scrollImage = BitmapFactory.decodeResource(getResources(), R.drawable.android);
     	ImageView scrollView = (ImageView) findViewById(R.id.scrollView);
@@ -192,11 +196,20 @@ public class AcceleroScrollDemo extends Activity {
     				Bitmap newImage = BitmapFactory.decodeFile(imagePath);
     				if (newImage != null){
     					ImageView myScrollView = (ImageView) findViewById(R.id.scrollView);
+    					
     					maxHTScroll = (int)((newImage.getHeight()/2) - (displayHeight /2));
     			    	maxWRScroll = (int)((newImage.getWidth()/2) - (displayWidth /2));
     			    	maxHBScroll = maxHTScroll * -1;
     			    	maxWLScroll = maxWRScroll * -1;
+    			    	
+    			    	myScrollView.scrollBy(currentPosX * (-1), currentPosY * (-1));
+    			    	
     					myScrollView.setImageBitmap(newImage);
+    					myScrollView.setScaleType(ImageView.ScaleType.CENTER);
+    					myScrollView.requestLayout();
+    					currentPosX = 0;
+    					currentPosY = 0;
+    					
     					scrollImage = newImage;
     				} else {
     					Log.v(TAG1, "bad image");
@@ -231,7 +244,7 @@ public class AcceleroScrollDemo extends Activity {
                 	float[] speed = msg.getData().getFloatArray("updateSpeed");
                 	Log.v(TAG, "Recieved update from service: " + movement[0]+ " " + movement[1] + " [" + speed[0] + ", " + speed[1]+"].");
                 	
-                	int moveX = (int)((movement[0] / inch) * xDPI);
+                	int moveX = (int)((movement[0] / inch) * xDPI) * (-1);
                 	int moveY = (int)((movement[1] / inch) * yDPI);
                 	Log.v(TAG, "moveX: " + moveX + " moveY: " + moveY);
                 	
