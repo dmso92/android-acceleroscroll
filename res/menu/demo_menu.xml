@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-<item android:enabled="true" android:id="@+id/settings" android:visible="true" android:menuCategory="system" android:title="@string/menu_settings"></item>
-<item android:menuCategory="system" android:id="@+id/imageLoader" android:enabled="true" android:title="@string/image_loader" android:visible="true"></item>
-<item android:enabled="true" android:menuCategory="system" android:id="@+id/resetImage" android:title="@string/reset_image" android:visible="true"></item>
+<item android:enabled="true" android:id="@+id/settings" android:visible="true" android:menuCategory="system" android:title="@string/menu_settings" android:icon="@android:drawable/ic_menu_preferences"></item>
+<item android:menuCategory="system" android:id="@+id/imageLoader" android:enabled="true" android:title="@string/image_loader" android:visible="true" android:icon="@android:drawable/ic_menu_upload"></item>
+<item android:enabled="true" android:menuCategory="system" android:id="@+id/resetImage" android:title="@string/reset_image" android:visible="true" android:icon="@android:drawable/ic_menu_revert"></item>
 </menu>
