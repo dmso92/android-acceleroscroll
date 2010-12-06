@@ -17,14 +17,18 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.View.OnTouchListener;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -33,9 +37,12 @@ public class AcceleroScrollDemo extends Activity {
 	
 	private static final String TAG = "AcceleroScrollDemo";
 	private static final String TAG1 = "TAG1";
+	private static final String TAG2 = "TAG2";
 	private static final int REQUEST_IMAGE_BROWSER = 11;
     private static final int REQUEST_CODE_PREFERENCES = 1;
     private static final double inch = 25.4;
+    
+    private static boolean isTouch = false;
 	
 	private Bitmap scrollImage;
 	private boolean isDefaultImage = true;
@@ -141,6 +148,8 @@ public class AcceleroScrollDemo extends Activity {
     	
 	    scrollView.scrollBy(currentPosX, currentPosY);
 	    
+	    scrollView.setOnTouchListener(imageTouchListener);
+	    
 	    maxHTScroll = (int)((scrollImage.getHeight()/2) - (displayHeight /2));
 	    maxWRScroll = (int)((scrollImage.getWidth()/2) - (displayWidth /2));
 	    maxHBScroll = maxHTScroll * -1;
@@ -232,7 +241,7 @@ public class AcceleroScrollDemo extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
     	super.onActivityResult(requestCode, resultCode, data);
     	
-    	if (requestCode == REQUEST_CODE_PREFERENCES) {
+    	/*if (requestCode == REQUEST_CODE_PREFERENCES) {
     		try {
 	        	Message msg = Message.obtain(null,
 	        			AcceleroScrollService.MSG_RESET_VALUE);
@@ -242,6 +251,7 @@ public class AcceleroScrollDemo extends Activity {
     			doBindService();
     		}
     	}
+    	*/
 
     	if (requestCode == REQUEST_IMAGE_BROWSER) {
     		if (resultCode == RESULT_OK) {
@@ -335,6 +345,32 @@ public class AcceleroScrollDemo extends Activity {
     }
     */
     
+    OnTouchListener imageTouchListener = new OnTouchListener(){
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            int action = event.getAction();
+
+            switch (action){
+	            case MotionEvent.ACTION_DOWN:
+	            	Log.v(TAG2, "action_down");
+	            	isTouch = true;
+	            	break;
+	
+	            case MotionEvent.ACTION_UP:
+	            	isTouch = false;
+	            	Log.v(TAG2, "action_up");
+	                break;
+	            case MotionEvent.ACTION_CANCEL:
+	            	isTouch = false;
+	            	Log.v(TAG2, "action_cancel");
+	                break;
+            }
+            return true;
+        }
+
+    };
+
+    
     /** Messenger for communicating with service. */
     Messenger mService = null;
     /** Flag indicating whether we have called bind on the service. */
@@ -346,69 +382,71 @@ public class AcceleroScrollDemo extends Activity {
     class IncomingHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case AcceleroScrollService.MSG_UPDATE_VALUES:
-                    //do something with the received stuff
-                	int scrollX = 0;
-                	int scrollY = 0;
-                	
-                	float[] movement = msg.getData().getFloatArray("updateMovement");
-                	float[] speed = msg.getData().getFloatArray("updateSpeed");
-                	Log.v(TAG, "Recieved update from service: " + movement[0]+ " " + movement[1] + " [" + speed[0] + ", " + speed[1]+"].");
-                	
-                	int moveX = (int)((movement[0] / inch) * xDPI) * (-1);
-                	int moveY = (int)((movement[1] / inch) * yDPI);
-                	Log.v(TAG, "moveX: " + moveX + " moveY: " + moveY);
-                	
-                	int nextX = currentPosX + moveX;
-                	int nextY = currentPosY + moveY;
-                	
-                	if(moveX < 0 && currentPosX != maxWLScroll){
-	                	if (nextX < maxWLScroll){ 
-	                		scrollX = maxWLScroll - currentPosX;
-	                		currentPosX = maxWLScroll;
-	                	} else {
-	                		currentPosX = nextX;
-	                		scrollX = moveX;
+        	if (!isTouch){
+	            switch (msg.what) {
+	                case AcceleroScrollService.MSG_UPDATE_VALUES:
+	                    //do something with the received stuff
+	                	int scrollX = 0;
+	                	int scrollY = 0;
+	                	
+	                	float[] movement = msg.getData().getFloatArray("updateMovement");
+	                	float[] speed = msg.getData().getFloatArray("updateSpeed");
+	                	Log.v(TAG, "Recieved update from service: " + movement[0]+ " " + movement[1] + " [" + speed[0] + ", " + speed[1]+"].");
+	                	
+	                	int moveX = (int)((movement[0] / inch) * xDPI) * (-1);
+	                	int moveY = (int)((movement[1] / inch) * yDPI);
+	                	Log.v(TAG, "moveX: " + moveX + " moveY: " + moveY);
+	                	
+	                	int nextX = currentPosX + moveX;
+	                	int nextY = currentPosY + moveY;
+	                	
+	                	if(moveX < 0 && currentPosX != maxWLScroll){
+		                	if (nextX < maxWLScroll){ 
+		                		scrollX = maxWLScroll - currentPosX;
+		                		currentPosX = maxWLScroll;
+		                	} else {
+		                		currentPosX = nextX;
+		                		scrollX = moveX;
+		                	}
 	                	}
-                	}
-                	if (moveX > 0 && currentPosX != maxWRScroll){
-	                	if (nextX > maxWRScroll){ 
-	                		scrollX = maxWRScroll - currentPosX;
-	                		currentPosX = maxWRScroll;
-	                	} else {
-	                		currentPosX = nextX;
-	                		scrollX = moveX;
+	                	if (moveX > 0 && currentPosX != maxWRScroll){
+		                	if (nextX > maxWRScroll){ 
+		                		scrollX = maxWRScroll - currentPosX;
+		                		currentPosX = maxWRScroll;
+		                	} else {
+		                		currentPosX = nextX;
+		                		scrollX = moveX;
+		                	}
 	                	}
-                	}
-                	
-                	if (moveY < 0 && currentPosY != maxHBScroll){
-	                	if (nextY < maxHBScroll){ 
-	                		scrollY = maxHBScroll - currentPosY;
-	                		currentPosY = maxHBScroll;
-	                	} else {
-	                		currentPosY = nextY;
-	                		scrollY = moveY;
+	                	
+	                	if (moveY < 0 && currentPosY != maxHBScroll){
+		                	if (nextY < maxHBScroll){ 
+		                		scrollY = maxHBScroll - currentPosY;
+		                		currentPosY = maxHBScroll;
+		                	} else {
+		                		currentPosY = nextY;
+		                		scrollY = moveY;
+		                	}
 	                	}
-                	}
-                	if (moveY > 0 && currentPosY != maxHTScroll){
-	                	if (nextY > maxHTScroll){ 
-	                		scrollY = maxHTScroll - currentPosY;
-	                		currentPosY = maxHTScroll;
-	                	} else {
-	                		currentPosY = nextY;
-	                		scrollY = moveY;
+	                	if (moveY > 0 && currentPosY != maxHTScroll){
+		                	if (nextY > maxHTScroll){ 
+		                		scrollY = maxHTScroll - currentPosY;
+		                		currentPosY = maxHTScroll;
+		                	} else {
+		                		currentPosY = nextY;
+		                		scrollY = moveY;
+		                	}
 	                	}
-                	}
-                	                	
-                	ImageView scrollViewH = (ImageView) findViewById(R.id.scrollView);
-                	scrollViewH.scrollBy(scrollX, scrollY);
-                	Log.v(TAG, "scrollX: " + scrollX + " scrollY: " + scrollY);
-                	
-                	break;
-                default:
-                    super.handleMessage(msg);
-            }
+	                	                	
+	                	ImageView scrollViewH = (ImageView) findViewById(R.id.scrollView);
+	                	scrollViewH.scrollBy(scrollX, scrollY);
+	                	Log.v(TAG, "scrollX: " + scrollX + " scrollY: " + scrollY);
+	                	
+	                	break;
+	                default:
+	                    super.handleMessage(msg);
+	            }
+        	}
         }
     }
 
