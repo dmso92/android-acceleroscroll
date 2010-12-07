@@ -13,6 +13,8 @@
 <string name="title_maxspeed">Max speed</string>
 <string name="title_threshold">Angle threshold</string>
 <string name="title_data_rate">Data rate</string>
+<string name="title_edge_soft">Edge softness</string>
+<string name="summary_edge_soft">Edges work like walls. Soft walls throttle speed.</string>
 <string name="summary_data_rate">update rate from service (FPS). Higher rates mean more smooth scrolling and more battery usage. (Note: application restart may be necessary)</string>
 <string name="summary_acceleration"></string>
 <string name="summary_springness">Inverse of preserving momentum.</string>
@@ -23,5 +25,5 @@
 <string name="image_loader">Load Image</string>
 <string name="reset_image">Reset Image</string>
 <string name="title_use_orientation">Use orientation</string>
-<string name="summary_use_orientation">Instead of manully computing angles.</string>
+<string name="summary_use_orientation">Instead of manually computing angles.</string>
 </resources>

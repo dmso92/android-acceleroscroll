@@ -49,6 +49,15 @@
 		ac:intervalMin="2.0"
 		android:defaultValue="15.0"
 	/>
+	<com.vutbr.fit.tam.acceleroscroll.SeekBarPreference
+		android:key="edge_soft"
+		android:title="@string/title_edge_soft"
+		android:summary="@string/summary_edge_soft"
+		android:persistent="false"
+		ac:intervalMax="1.0"
+		ac:intervalMin="0.0"
+		android:defaultValue="0.5"
+	/>
 <CheckBoxPreference android:key="use_orientation" android:summary="@string/summary_use_orientation" android:persistent="false" android:title="@string/title_use_orientation"></CheckBoxPreference>
 </PreferenceCategory>
 </PreferenceScreen>
