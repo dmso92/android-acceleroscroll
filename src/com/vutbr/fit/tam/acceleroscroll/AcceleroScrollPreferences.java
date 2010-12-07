@@ -42,6 +42,8 @@ public class AcceleroScrollPreferences extends PreferenceActivity
         seek.setOnPreferenceChangeListener(this);
         seek = (SeekBarPreference) this.findPreference("data_rate");
         seek.setOnPreferenceChangeListener(this);
+        seek = (SeekBarPreference) this.findPreference("edge_soft");
+        seek.setOnPreferenceChangeListener(this);
         Log.v(TAG, "Setting change listeners");
         
         CheckBoxPreference use_orient = (CheckBoxPreference) this.findPreference("use_orientation");
@@ -63,6 +65,8 @@ public class AcceleroScrollPreferences extends PreferenceActivity
 			this.sendFloat(AcceleroScrollService.PREFERENCE_THRESHOLD, newValue);
 		} else if(key.equals("data_rate")) {
 			this.sendFloat(AcceleroScrollService.PREFERENCE_FPS, newValue);
+		} else if(key.equals("edge_soft")) {
+			this.sendFloat(AcceleroScrollService.PREFERENCE_WALL_BOUNCE, 1.0f - (Float) newValue);
 		} else if(key.equals("use_orientation")) {
 			this.sendBoolean(AcceleroScrollService.PREFERENCE_USE_HAND_BASED, newValue);
 		}
@@ -146,6 +150,8 @@ public class AcceleroScrollPreferences extends PreferenceActivity
                     seek.setValue(data.getFloat("threshold"));
                     seek = (SeekBarPreference) AcceleroScrollPreferences.this.findPreference("data_rate");
                     seek.setValue(data.getFloat("fps"));
+                    seek = (SeekBarPreference) AcceleroScrollPreferences.this.findPreference("edge_soft");
+                    seek.setValue(1.0f-data.getFloat("wall_bounce"));
                     
                     CheckBoxPreference use_orient = (CheckBoxPreference) AcceleroScrollPreferences.this.findPreference("use_orientation");
                     use_orient.setChecked(data.getBoolean("use_hand_based"));

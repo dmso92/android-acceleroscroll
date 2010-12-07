@@ -47,7 +47,7 @@ public class AcceleroScrollService extends Service {
      * Just for emulator should be removed from production
      * 
      */
-    private boolean useEmulator = true;
+    private boolean useEmulator = false;
     private AcceleroSensorManagerInterface sensorManager;
     
 
@@ -110,17 +110,25 @@ public class AcceleroScrollService extends Service {
      */
     static final int PREFERENCE_FPS = 5;
     /**
-     * Set if Phone based/hand based method should be used.
+     * Set if orientation sensor should be used.
      * Default is phone based method
      */
     static final int PREFERENCE_USE_HAND_BASED = 6;
+    /**
+     * wall_bounce
+     */
+    static final int PREFERENCE_WALL_BOUNCE = 7;
+    
+    /**
+     * Set
+     */
     
     /**
      * send all preferences at once to preference activity, the 
      * key strings are lowercase values of the given preferences
      * for example max_scroll_speed
      */
-    static final int PREFERENCE_ALL = 7;
+    static final int PREFERENCE_ALL = 8;
 
     /**
      * Message to clients with the updated values.
@@ -129,9 +137,7 @@ public class AcceleroScrollService extends Service {
     
     /**
      * Message when a wall was hit, and the scrolling should bounce away
-     * The arg2 should define if the horizontal or vertical wall was hit
-     * top/down arg2 = 1
-     * right/left arg2 = 0
+     * The arg1 should define which wall was hit, top = 0, bottom=1, right=2, left=3
      */
     static final int MSG_WALL_HIT = 7;
     
@@ -158,6 +164,8 @@ public class AcceleroScrollService extends Service {
                 case MSG_SET_PREFERENCES_VALUE:
                     setPreferencesValue(msg.arg1, msg.getData());
                     break;
+                case MSG_WALL_HIT:
+                	scrollManager.hitWall(msg.arg1);
                 default:
                     super.handleMessage(msg);
             }
@@ -169,12 +177,11 @@ public class AcceleroScrollService extends Service {
      * @param msger the messenger client the callbacks should be sent to
      */
     private synchronized void addClient(Messenger msger){
-    	if(mClients.size() == 0){
-    		//if the first client start listening on accelerometer
-    		sensorManager.startListening(this, scrollManager);
-    		
+    	if(mClients.size() == 0){    		
     		//start the timer to add send update to clients
     		this.startTimer();
+    		//if the first client start listening on accelerometer
+    		sensorManager.startListening(this, scrollManager);
     	}
     	if(mClients.contains(msger)){
     		Log.w(TAG, "Client trying to reconnect without unregistering first.");
@@ -263,6 +270,10 @@ public class AcceleroScrollService extends Service {
 	    		updateMessage.arg1 = PREFERENCE_FPS;
 	    		data.putFloat("value", this.updateFPS);
 	    		break;
+	    	case PREFERENCE_WALL_BOUNCE:
+	    		updateMessage.arg1 = PREFERENCE_WALL_BOUNCE;
+	    		data.putFloat("value", scrollManager.getWallBounce());
+	    		break;
 	    	case PREFERENCE_USE_HAND_BASED:
 	    		updateMessage.arg1 = PREFERENCE_USE_HAND_BASED;
 	    		data.putBoolean("value", scrollManager.isUseHandBased());
@@ -274,6 +285,7 @@ public class AcceleroScrollService extends Service {
 	    		data.putFloat("springness", scrollManager.getSpringness());
 	    		data.putFloat("fps", this.updateFPS);
 	    		data.putFloat("threshold", scrollManager.getThreshold());
+	    		data.putFloat("wall_bounce", scrollManager.getWallBounce());
 	    		data.putBoolean("use_hand_based", scrollManager.isUseHandBased());
 	    		break;
     		default:
@@ -310,6 +322,10 @@ public class AcceleroScrollService extends Service {
     	case PREFERENCE_THRESHOLD:
     		scrollManager.setThreshold(data.getFloat("value"));
             editor.putFloat("threshold", scrollManager.getThreshold());
+    		break;
+    	case PREFERENCE_WALL_BOUNCE:
+    		scrollManager.setWallBounce(data.getFloat("value"));
+            editor.putFloat("wall_bounce", scrollManager.getWallBounce());
     		break;
     	case PREFERENCE_ORIENTATION:
     		scrollManager.setOrientation(data.getInt("value"));
@@ -379,6 +395,7 @@ public class AcceleroScrollService extends Service {
         scrollManager.setSpringness(settings.getFloat("springness", scrollManager.getSpringness()));
         scrollManager.setThreshold(settings.getFloat("threshold", scrollManager.getThreshold()));
         scrollManager.setUseHandBased(settings.getBoolean("use_hand_based", false));
+        scrollManager.setWallBounce(settings.getFloat("wall_bounce", scrollManager.getWallBounce()));
         this.updateFPS = settings.getFloat("fps", this.updateFPS);
     }
 

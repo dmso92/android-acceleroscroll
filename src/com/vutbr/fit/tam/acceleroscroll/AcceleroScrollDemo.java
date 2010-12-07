@@ -444,8 +444,8 @@ public class AcceleroScrollDemo extends Activity {
 		                	}
 	                	}
 	                	
-	                	if (currentPosX == maxHBScroll) {
-	                		wallHitM = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, BOTTOM_WALL, 0);
+	                	if (currentPosY == maxHBScroll) {
+	                		wallHitM = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, TOP_WALL, 0);
 	                	} else {
 		                	if (moveY < 0){
 			                	if (nextY < maxHBScroll){ 
@@ -458,8 +458,8 @@ public class AcceleroScrollDemo extends Activity {
 		                	}
 	                	}
 	                	
-	                	if (currentPosX == maxHTScroll) {
-	                		wallHitM = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, TOP_WALL, 0);
+	                	if (currentPosY == maxHTScroll) {
+	                		wallHitM = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, BOTTOM_WALL, 0);
 	                	} else {
 		                	if (moveY > 0){
 			                	if (nextY > maxHTScroll){ 
@@ -474,6 +474,7 @@ public class AcceleroScrollDemo extends Activity {
 	                	                	
 	                	if (wallHitM != null){
 	                		try {
+								Log.w(TAG, "Sending hit wall "+wallHitM.arg1);
 								mService.send(wallHitM);
 							} catch (RemoteException e) {
 								// In this case the service has crashed before we could even

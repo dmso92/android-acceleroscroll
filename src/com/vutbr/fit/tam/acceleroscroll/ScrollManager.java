@@ -17,6 +17,7 @@ public class ScrollManager implements AcceleroSensorListener {
 	private float maxSpeed = 100.0f;
 	private float acceleration = 2.0f;
 	private float springness = 3.0f;
+	private float wall_bounce = 0.5f;
 	
 	private static int HISTORY_SIZE = 2;
 	private float[] accelerationHistory = new float[HISTORY_SIZE*3];
@@ -142,18 +143,15 @@ public class ScrollManager implements AcceleroSensorListener {
 				tmp = outMovement[0];
 				outMovement[0] = -outMovement[1];
 				outMovement[1] = tmp;
-				Log.v(TAG, "rotate90");
 				break;
 			case Surface.ROTATION_180:
 				outMovement[0] = -outMovement[0];
 				outMovement[1] = -outMovement[1];
-				Log.v(TAG, "rotate180");
 				break;
 			case Surface.ROTATION_270:
 				tmp = outMovement[0];
 				outMovement[0] = outMovement[1];
 				outMovement[1] = -tmp;
-				Log.v(TAG, "rotate270");
 				break;
 		}
 	}
@@ -185,6 +183,14 @@ public class ScrollManager implements AcceleroSensorListener {
 		return (float) Math.acos(axis1/Math.sqrt(axis1*axis1 + axis2*axis2));
 	}
 	
+	public float getWallBounce() {
+		return wall_bounce;
+	}
+
+	public void setWallBounce(float wall_bounce) {
+		this.wall_bounce = wall_bounce;
+	}
+
 	public boolean isUseHandBased() {
 		return useHandBased;
 	}
@@ -313,7 +319,6 @@ public class ScrollManager implements AcceleroSensorListener {
         SensorManager.getOrientation(rotationMatrix, orientationAngles);
         rotationAngles[0] = orientationAngles[1];
         rotationAngles[1] = orientationAngles[2];
-		Log.v(TAG, "orientationGetAngles: "+rotationAngles[0]+" "+rotationAngles[1]);
 	}
 	
 	private float getCurrentSpeed(float currentSpeed, float movement, float timeDiff){
@@ -329,6 +334,47 @@ public class ScrollManager implements AcceleroSensorListener {
 		magSensorValues[0] = field1;
 		magSensorValues[1] = field2;
 		magSensorValues[2] = field3;
+	}
+	
+	public void hitWall(int wall){
+		switch(orientation){
+		//device counterclockwise rotation
+			case Surface.ROTATION_0:
+				//everything fine
+				break;
+			case Surface.ROTATION_90:
+				wall += 1;
+				break;
+			case Surface.ROTATION_180:
+				wall += 2;
+				break;
+			case Surface.ROTATION_270:
+				wall += 3;
+				break;
+		}
+		if(wall > 3) wall -= 4;
+		switch(wall){
+			case 0: //ytop
+				if(speed[1] < 0){
+					speed[1] *= -wall_bounce;
+				}
+				break;
+			case 1: //xright
+				if(speed[0] < 0){
+					speed[0] *= -wall_bounce;
+				}
+				break;
+			case 2: //ybottom
+				if(speed[1] > 0){
+					speed[1] *= -wall_bounce;
+				}
+				break;
+			case 3: //xleft
+				if(speed[0] > 0){
+					speed[0] *= -wall_bounce;
+				}
+				break;
+		}
 	}
 
 }
