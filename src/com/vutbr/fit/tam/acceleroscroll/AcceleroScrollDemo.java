@@ -400,7 +400,8 @@ public class AcceleroScrollDemo extends Activity {
 	            switch (msg.what) {
 	                case AcceleroScrollService.MSG_UPDATE_VALUES:
 	                    //do something with the received stuff
-	                	Message wallHitM = null;
+	                	Message wallHitV = null; //vertical message
+	                	Message wallHitH = null; //horizontal message
 	                	
 	                	int scrollX = 0;
 	                	int scrollY = 0;
@@ -417,7 +418,7 @@ public class AcceleroScrollDemo extends Activity {
 	                	int nextY = currentPosY + moveY;
 	                	
 	                	if(currentPosX == maxWLScroll){
-	                		wallHitM = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, LEFT_WALL, 0);
+	                		wallHitH = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, LEFT_WALL, 0);
 	                	} else {
 		                	if (moveX < 0) {
 			                	if (nextX < maxWLScroll){ 
@@ -431,7 +432,7 @@ public class AcceleroScrollDemo extends Activity {
 	                	}
 	                	
 	                	if (currentPosX == maxWRScroll) {
-	                		wallHitM = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, RIGHT_WALL, 0);
+	                		wallHitH = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, RIGHT_WALL, 0);
 	                	} else {
 		                	if (moveX > 0) {
 			                	if (nextX > maxWRScroll){ 
@@ -445,7 +446,7 @@ public class AcceleroScrollDemo extends Activity {
 	                	}
 	                	
 	                	if (currentPosY == maxHBScroll) {
-	                		wallHitM = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, TOP_WALL, 0);
+	                		wallHitV = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, TOP_WALL, 0);
 	                	} else {
 		                	if (moveY < 0){
 			                	if (nextY < maxHBScroll){ 
@@ -459,7 +460,7 @@ public class AcceleroScrollDemo extends Activity {
 	                	}
 	                	
 	                	if (currentPosY == maxHTScroll) {
-	                		wallHitM = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, BOTTOM_WALL, 0);
+	                		wallHitV = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, BOTTOM_WALL, 0);
 	                	} else {
 		                	if (moveY > 0){
 			                	if (nextY > maxHTScroll){ 
@@ -472,17 +473,19 @@ public class AcceleroScrollDemo extends Activity {
 		                	}
 	                	}
 	                	                	
-	                	if (wallHitM != null){
-	                		try {
-								Log.w(TAG, "Sending hit wall "+wallHitM.arg1);
-								mService.send(wallHitM);
-							} catch (RemoteException e) {
-								// In this case the service has crashed before we could even
-				                // do anything with it; we can count on soon being
-				                // disconnected (and then reconnected if it can be restarted)
-				                // so there is no need to do anything here.
-							}
-	                	}
+                		try {
+    	                	if (wallHitH != null){
+    	                		mService.send(wallHitH);
+    	                	} 
+    	                	if (wallHitV != null){
+    	                		mService.send(wallHitV);
+    	                	}
+						} catch (RemoteException e) {
+							// In this case the service has crashed before we could even
+			                // do anything with it; we can count on soon being
+			                // disconnected (and then reconnected if it can be restarted)
+			                // so there is no need to do anything here.
+						}
 	                	
 	                	ImageView scrollViewH = (ImageView) findViewById(R.id.scrollView);
 	                	scrollViewH.scrollBy(scrollX, scrollY);
