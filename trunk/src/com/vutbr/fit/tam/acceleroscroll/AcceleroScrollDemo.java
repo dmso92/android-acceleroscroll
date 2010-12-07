@@ -41,6 +41,10 @@ public class AcceleroScrollDemo extends Activity {
 	private static final int REQUEST_IMAGE_BROWSER = 11;
     private static final int REQUEST_CODE_PREFERENCES = 1;
     private static final double inch = 25.4;
+    private static final int TOP_WALL = 0;
+    private static final int BOTTOM_WALL = 2;
+    private static final int RIGHT_WALL = 1;
+    private static final int LEFT_WALL = 3;
     
     private static boolean isTouch = false;
 	
@@ -352,6 +356,17 @@ public class AcceleroScrollDemo extends Activity {
             switch (action){
 	            case MotionEvent.ACTION_DOWN:
 	            	Log.v(TAG2, "action_down");
+	            	if (isTouch) {
+	                	try {
+	                		Message msg = Message.obtain(null, AcceleroScrollService.MSG_RESET_VALUE);
+							mService.send(msg);
+						} catch (RemoteException e) {
+							// In this case the service has crashed before we could even
+			                // do anything with it; we can count on soon being
+			                // disconnected (and then reconnected if it can be restarted)
+			                // so there is no need to do anything here.
+						}
+	            	}
 	            	isTouch = !isTouch;
 	            	break;
 	
@@ -385,6 +400,8 @@ public class AcceleroScrollDemo extends Activity {
 	            switch (msg.what) {
 	                case AcceleroScrollService.MSG_UPDATE_VALUES:
 	                    //do something with the received stuff
+	                	Message wallHitM = null;
+	                	
 	                	int scrollX = 0;
 	                	int scrollY = 0;
 	                	
@@ -399,44 +416,73 @@ public class AcceleroScrollDemo extends Activity {
 	                	int nextX = currentPosX + moveX;
 	                	int nextY = currentPosY + moveY;
 	                	
-	                	if(moveX < 0 && currentPosX != maxWLScroll){
-		                	if (nextX < maxWLScroll){ 
-		                		scrollX = maxWLScroll - currentPosX;
-		                		currentPosX = maxWLScroll;
-		                	} else {
-		                		currentPosX = nextX;
-		                		scrollX = moveX;
-		                	}
-	                	}
-	                	if (moveX > 0 && currentPosX != maxWRScroll){
-		                	if (nextX > maxWRScroll){ 
-		                		scrollX = maxWRScroll - currentPosX;
-		                		currentPosX = maxWRScroll;
-		                	} else {
-		                		currentPosX = nextX;
-		                		scrollX = moveX;
+	                	if(currentPosX == maxWLScroll){
+	                		wallHitM = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, LEFT_WALL, 0);
+	                	} else {
+		                	if (moveX < 0) {
+			                	if (nextX < maxWLScroll){ 
+			                		scrollX = maxWLScroll - currentPosX;
+			                		currentPosX = maxWLScroll;
+			                	} else {
+			                		currentPosX = nextX;
+			                		scrollX = moveX;
+			                	}
 		                	}
 	                	}
 	                	
-	                	if (moveY < 0 && currentPosY != maxHBScroll){
-		                	if (nextY < maxHBScroll){ 
-		                		scrollY = maxHBScroll - currentPosY;
-		                		currentPosY = maxHBScroll;
-		                	} else {
-		                		currentPosY = nextY;
-		                		scrollY = moveY;
+	                	if (currentPosX == maxWRScroll) {
+	                		wallHitM = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, RIGHT_WALL, 0);
+	                	} else {
+		                	if (moveX > 0) {
+			                	if (nextX > maxWRScroll){ 
+			                		scrollX = maxWRScroll - currentPosX;
+			                		currentPosX = maxWRScroll;
+			                	} else {
+			                		currentPosX = nextX;
+			                		scrollX = moveX;
+			                	}
 		                	}
 	                	}
-	                	if (moveY > 0 && currentPosY != maxHTScroll){
-		                	if (nextY > maxHTScroll){ 
-		                		scrollY = maxHTScroll - currentPosY;
-		                		currentPosY = maxHTScroll;
-		                	} else {
-		                		currentPosY = nextY;
-		                		scrollY = moveY;
+	                	
+	                	if (currentPosX == maxHBScroll) {
+	                		wallHitM = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, BOTTOM_WALL, 0);
+	                	} else {
+		                	if (moveY < 0){
+			                	if (nextY < maxHBScroll){ 
+			                		scrollY = maxHBScroll - currentPosY;
+			                		currentPosY = maxHBScroll;
+			                	} else {
+			                		currentPosY = nextY;
+			                		scrollY = moveY;
+			                	}
+		                	}
+	                	}
+	                	
+	                	if (currentPosX == maxHTScroll) {
+	                		wallHitM = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, TOP_WALL, 0);
+	                	} else {
+		                	if (moveY > 0){
+			                	if (nextY > maxHTScroll){ 
+			                		scrollY = maxHTScroll - currentPosY;
+			                		currentPosY = maxHTScroll;
+			                	} else {
+			                		currentPosY = nextY;
+			                		scrollY = moveY;
+			                	}
 		                	}
 	                	}
 	                	                	
+	                	if (wallHitM != null){
+	                		try {
+								mService.send(wallHitM);
+							} catch (RemoteException e) {
+								// In this case the service has crashed before we could even
+				                // do anything with it; we can count on soon being
+				                // disconnected (and then reconnected if it can be restarted)
+				                // so there is no need to do anything here.
+							}
+	                	}
+	                	
 	                	ImageView scrollViewH = (ImageView) findViewById(R.id.scrollView);
 	                	scrollViewH.scrollBy(scrollX, scrollY);
 	                	Log.v(TAG, "scrollX: " + scrollX + " scrollY: " + scrollY);
