@@ -83,6 +83,7 @@ public class AcceleroScrollService extends Service {
      */
     static final int MSG_SET_PREFERENCES_VALUE = 5;
     
+    
     /**
      * Threshold under which no movement should be detected.
      */
@@ -125,6 +126,14 @@ public class AcceleroScrollService extends Service {
      * Message to clients with the updated values.
      */
     static final int MSG_UPDATE_VALUES = 6;
+    
+    /**
+     * Message when a wall was hit, and the scrolling should bounce away
+     * The arg2 should define if the horizontal or vertical wall was hit
+     * top/down arg2 = 1
+     * right/left arg2 = 0
+     */
+    static final int MSG_WALL_HIT = 7;
     
     /**
      * Handler of incoming messages from clients.
