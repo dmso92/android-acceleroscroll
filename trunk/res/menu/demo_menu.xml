@@ -3,4 +3,6 @@
 <item android:enabled="true" android:id="@+id/settings" android:visible="true" android:menuCategory="system" android:title="@string/menu_settings" android:icon="@android:drawable/ic_menu_preferences"></item>
 <item android:menuCategory="system" android:id="@+id/imageLoader" android:enabled="true" android:title="@string/image_loader" android:visible="true" android:icon="@android:drawable/ic_menu_upload"></item>
 <item android:enabled="true" android:menuCategory="system" android:id="@+id/resetImage" android:title="@string/reset_image" android:visible="true" android:icon="@android:drawable/ic_menu_revert"></item>
+<item android:enabled="true" android:menuCategory="system" android:id="@+id/savedRot" android:title="@string/saved_orientation" android:visible="true" android:icon="@android:drawable/ic_menu_save"></item>
+<item android:enabled="true" android:menuCategory="system" android:id="@+id/automaticRot" android:title="@string/automatic_orientation" android:visible="true" android:icon="@android:drawable/ic_menu_rotate"></item>
 </menu>

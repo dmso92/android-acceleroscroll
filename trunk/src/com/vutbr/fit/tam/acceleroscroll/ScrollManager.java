@@ -164,6 +164,9 @@ public class ScrollManager implements AcceleroSensorListener {
 			}
 			outMovement[1] *= -1;
 		}
+		//invert the Y coordinate, as the y axis in accelerometer and screen 
+		//are in the other direction
+		outMovement[1] *= -1;
 	}
 	
 	

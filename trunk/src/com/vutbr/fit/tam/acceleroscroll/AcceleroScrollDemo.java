@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -25,6 +26,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.Surface;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -36,8 +38,6 @@ import android.widget.Toast;
 public class AcceleroScrollDemo extends Activity {
 	
 	private static final String TAG = "AcceleroScrollDemo";
-	private static final String TAG1 = "TAG1";
-	private static final String TAG2 = "TAG2";
 	private static final int REQUEST_IMAGE_BROWSER = 11;
     private static final int REQUEST_CODE_PREFERENCES = 1;
     private static final double inch = 25.4;
@@ -64,23 +64,23 @@ public class AcceleroScrollDemo extends Activity {
 	
 	private int currentPosX = 0;
     private int currentPosY = 0;
+    private int orientationRequest = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
 	
 	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        /*  
-        if (savedInstanceState != null){
-        	Log.v(TAG1, "notnull");
-	        isDefaultImage = savedInstanceState.getBoolean("defaultImage", true);
-	     }
-        */
+      
         
         // Get the between instance stored values
         SharedPreferences imagePreferences = getPreferences(MODE_PRIVATE);
         isDefaultImage = imagePreferences.getBoolean("defaultImage", true);
+        
+    	currentPosX = imagePreferences.getInt("currentPosX", 0);
+      	currentPosY = imagePreferences.getInt("currentPosY", 0);
+      	orientationRequest = imagePreferences.getInt("orientationRequest", orientationRequest);
+      	this.setRequestedOrientation(orientationRequest);
         
         
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -101,49 +101,13 @@ public class AcceleroScrollDemo extends Activity {
     	yDPI = metricsDPI.ydpi;
         	
     	
-    	
-    	/*Button prefButton = (Button) findViewById(R.id.prefButton);
-    	prefButton.setWidth(displayWidth/2);
-    	prefButton.setHeight(50);
-        prefButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-            	Intent launchPreferences = new Intent(view.getContext(), AcceleroScrollPreferences.class);
-    			startActivity(launchPreferences);
-            }
-
-        });
-        
-        Button imageButton = (Button) findViewById(R.id.imageButton);
-        imageButton.setWidth(displayWidth/2);
-    	imageButton.setHeight(50);
-        imageButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                Intent imagesIntent = new Intent(view.getContext(), AcceleroScrollImages.class);
-                startActivityForResult(imagesIntent, REQUEST_IMAGE_BROWSER);
-            }
-
-        });*/
-    	
     	if (isDefaultImage){
-	    	scrollImage = BitmapFactory.decodeResource(getResources(), R.drawable.android);	    
-	    	Log.v(TAG1, "isdefault");
+	    	scrollImage = BitmapFactory.decodeResource(getResources(), R.drawable.android);
+	    	Log.v(TAG, "Loading deafult image.");
     	} else {
     		
     		currentImagePath = imagePreferences.getString("imagePath", "/mnt/sdcard/droid.png");
     		scrollImage = BitmapFactory.decodeFile(currentImagePath);
-
-	      	currentPosX = imagePreferences.getInt("currentPosX", 0);
-	      	currentPosY = imagePreferences.getInt("currentPosY", 0);
-    		
-    		/*
-    		currentImagePath = savedInstanceState.getString("imagePath");
-    		scrollImage = BitmapFactory.decodeFile(currentImagePath);
-
-	      	currentPosX = savedInstanceState.getInt("currentPosX");
-	      	currentPosY = savedInstanceState.getInt("currentPosY");
-	      	*/
-	      	
-	      	Log.v(TAG1, "okok");
     	}
     	
    	
@@ -154,9 +118,9 @@ public class AcceleroScrollDemo extends Activity {
 	    
 	    scrollView.setOnTouchListener(imageTouchListener);
 	    
-	    maxHTScroll = (int)((scrollImage.getHeight()/2) - (displayHeight /2));
+	    maxHBScroll = (int)((scrollImage.getHeight()/2) - (displayHeight /2));
 	    maxWRScroll = (int)((scrollImage.getWidth()/2) - (displayWidth /2));
-	    maxHBScroll = maxHTScroll * -1;
+	    maxHTScroll = maxHBScroll * -1;
 	    maxWLScroll = maxWRScroll * -1;  
     	//Log.v(TAG, "viewHeight: " + displayHeight + " viewWidth: " + displayWidth + " maxHScroll: " + maxHScroll + " maxWScroll: " + maxWScroll);
     	
@@ -189,6 +153,7 @@ public class AcceleroScrollDemo extends Activity {
     	editorIP.putString("imagePath", currentImagePath);
     	editorIP.putInt("currentPosX", currentPosX);
     	editorIP.putInt("currentPosY", currentPosY);
+    	editorIP.putInt("orientationRequest", orientationRequest);
     	
     	editorIP.commit();
     	
@@ -199,6 +164,16 @@ public class AcceleroScrollDemo extends Activity {
     public boolean onCreateOptionsMenu(Menu menu){
     	MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.demo_menu, menu);
+    	return true;
+    }
+    
+    @Override
+    public boolean onPrepareOptionsMenu (Menu menu){
+    	MenuItem itemSaved = menu.findItem(R.id.savedRot);
+        MenuItem itemAutomatic = menu.findItem(R.id.automaticRot);
+        boolean st = orientationRequest == ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+        itemSaved.setVisible(st);
+        itemAutomatic.setVisible(!st);
     	return true;
     }
     
@@ -235,6 +210,42 @@ public class AcceleroScrollDemo extends Activity {
     	    	isDefaultImage = true;
     	    	
     			return true;
+    		case R.id.automaticRot:
+    			//clicked on saved item, set automatic rotation
+    			orientationRequest = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+    			this.setRequestedOrientation(orientationRequest);
+    			return true;
+    		case R.id.savedRot:
+    			//clicked on automatic item -> save orientation
+    			/* First, get the Display from the WindowManager */  
+    	    	Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();  
+    	    	  
+    	    	/* Now we can retrieve all display-related infos */  
+    	    	int rot = display.getRotation();
+    	    	
+    	    	/*
+    	    	 * Unfortunately api 8 doesn't support reverse portrait
+    	    	 * and reverser landscape modes, so only simple portrait
+    	    	 * and landscapes are supported
+    	    	 */
+    	    	switch(rot){
+    	    	
+    	    		case Surface.ROTATION_0:
+    	    			orientationRequest = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+    	    			break;
+    	    		case Surface.ROTATION_90:
+    	    			orientationRequest = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+    	    			break;
+    	    		case Surface.ROTATION_180:
+    	    			orientationRequest = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+    	    			break;
+    	    		case Surface.ROTATION_270:
+    	    			orientationRequest = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+    	    			break;
+    	    			
+    	    	}
+    	    	this.setRequestedOrientation(orientationRequest);
+    			return true;
     		default:
     			return super.onOptionsItemSelected(item);
     	}
@@ -244,25 +255,11 @@ public class AcceleroScrollDemo extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
     	super.onActivityResult(requestCode, resultCode, data);
-    	
-    	/*if (requestCode == REQUEST_CODE_PREFERENCES) {
-    		try {
-	        	Message msg = Message.obtain(null,
-	        			AcceleroScrollService.MSG_RESET_VALUE);
-	        	mService.send(msg);
-    		} catch (RemoteException e) {
-    			doUnbindService();
-    			doBindService();
-    		}
-    	}
-    	*/
 
     	if (requestCode == REQUEST_IMAGE_BROWSER) {
     		if (resultCode == RESULT_OK) {
     			Bundle extras = data.getExtras();
     			String imagePath = extras.getString("imagePath");
-    			
-    			Log.v(TAG1, imagePath);
     			
     			File imageFile = new File(imagePath);
     			if(imageFile.exists()){
@@ -288,66 +285,15 @@ public class AcceleroScrollDemo extends Activity {
     					isDefaultImage = false;
     					
     				} else {
-    					Log.v(TAG1, "bad image");
+    					Log.w(TAG, "Error loading image");
     				}
     			} else {
     				//
     			}
     		} else {
-    			//Log.v(TAG1, "fakk");
     		}
     	}
     }
-    
-    /*
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-      // Save UI state changes to the savedInstanceState.
-      // This bundle will be passed to onCreate if the process is
-      // killed and restarted.
-    	if(isDefaultImage){
-    		savedInstanceState.putBoolean("defaultImage", true);	
-    		Log.v(TAG1, "isdefaultimage");
-    	} else {
-    		Log.v(TAG1, currentImagePath + " " + currentPosX + " " + currentPosY);
-    		savedInstanceState.putBoolean("defaultImage", false);
-    		savedInstanceState.putString("imagePath", currentImagePath);
-    		savedInstanceState.putInt("currentPosX", currentPosX);
-    		savedInstanceState.putInt("currentPosY", currentPosY);
-    	}
-      
-      super.onSaveInstanceState(savedInstanceState);
-    }
-    */
-    
-    
-    /*
-    @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
-      super.onRestoreInstanceState(savedInstanceState);
-      // Restore UI state from the savedInstanceState.
-      // This bundle has also been passed to onCreate.
-      if (!savedInstanceState.getBoolean("defaultImage")){
-    	  Bitmap currentImage = BitmapFactory.decodeFile(savedInstanceState.getString("imagePath"));
-    	  ImageView myScrollView = (ImageView) findViewById(R.id.scrollView);
-			
-    	  maxHTScroll = (int)((currentImage.getHeight()/2) - (displayHeight /2));
-    	  maxWRScroll = (int)((currentImage.getWidth()/2) - (displayWidth /2));
-    	  maxHBScroll = maxHTScroll * -1;
-    	  maxWLScroll = maxWRScroll * -1;
-    	  
-    	  currentPosX = savedInstanceState.getInt("currentPosX");
-    	  currentPosY = savedInstanceState.getInt("currentPosY");
-    	  myScrollView.scrollBy(currentPosX, currentPosY);
-	    	
-    	  myScrollView.setImageBitmap(currentImage);
-    	  myScrollView.setScaleType(ImageView.ScaleType.CENTER);
-    	  myScrollView.requestLayout();
-    	  
-    	  scrollImage = currentImage;
-      }
-    }
-    */
     
     OnTouchListener imageTouchListener = new OnTouchListener(){
         public boolean onTouch(View v, MotionEvent event) {
@@ -355,7 +301,6 @@ public class AcceleroScrollDemo extends Activity {
 
             switch (action){
 	            case MotionEvent.ACTION_DOWN:
-	            	Log.v(TAG2, "action_down");
 	            	if (isTouch) {
 	                	try {
 	                		Message msg = Message.obtain(null, AcceleroScrollService.MSG_RESET_VALUE);
@@ -372,11 +317,9 @@ public class AcceleroScrollDemo extends Activity {
 	
 	            case MotionEvent.ACTION_UP:
 	            	//isTouch = false;
-	            	Log.v(TAG2, "action_up");
 	                break;
 	            case MotionEvent.ACTION_CANCEL:
 	            	//isTouch = false;
-	            	Log.v(TAG2, "action_cancel");
 	                break;
             }
             return true;
@@ -408,11 +351,11 @@ public class AcceleroScrollDemo extends Activity {
 	                	
 	                	float[] movement = msg.getData().getFloatArray("updateMovement");
 	                	float[] speed = msg.getData().getFloatArray("updateSpeed");
-	                	Log.v(TAG, "Recieved update from service: " + movement[0]+ " " + movement[1] + " [" + speed[0] + ", " + speed[1]+"].");
+	                	//Log.v(TAG, "Recieved update from service: " + movement[0]+ " " + movement[1] + " [" + speed[0] + ", " + speed[1]+"].");
 	                	
 	                	int moveX = (int)((movement[0] / inch) * xDPI) * (-1);
-	                	int moveY = (int)((movement[1] / inch) * yDPI);
-	                	Log.v(TAG, "moveX: " + moveX + " moveY: " + moveY);
+	                	int moveY = (int)((movement[1] / inch) * yDPI) * (-1);
+	                	//Log.v(TAG, "moveX: " + moveX + " moveY: " + moveY);
 	                	
 	                	int nextX = currentPosX + moveX;
 	                	int nextY = currentPosY + moveY;
@@ -446,10 +389,10 @@ public class AcceleroScrollDemo extends Activity {
 	                	}
 	                	
 	                	if (currentPosY == maxHBScroll) {
-	                		wallHitV = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, TOP_WALL, 0);
+	                		wallHitV = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, BOTTOM_WALL, 0);
 	                	} else {
-		                	if (moveY < 0){
-			                	if (nextY < maxHBScroll){ 
+		                	if (moveY > 0){
+			                	if (nextY > maxHBScroll){ 
 			                		scrollY = maxHBScroll - currentPosY;
 			                		currentPosY = maxHBScroll;
 			                	} else {
@@ -460,10 +403,10 @@ public class AcceleroScrollDemo extends Activity {
 	                	}
 	                	
 	                	if (currentPosY == maxHTScroll) {
-	                		wallHitV = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, BOTTOM_WALL, 0);
+	                		wallHitV = Message.obtain(null, AcceleroScrollService.MSG_WALL_HIT, TOP_WALL, 0);
 	                	} else {
-		                	if (moveY > 0){
-			                	if (nextY > maxHTScroll){ 
+		                	if (moveY < 0){
+			                	if (nextY < maxHTScroll){ 
 			                		scrollY = maxHTScroll - currentPosY;
 			                		currentPosY = maxHTScroll;
 			                	} else {
@@ -489,7 +432,7 @@ public class AcceleroScrollDemo extends Activity {
 	                	
 	                	ImageView scrollViewH = (ImageView) findViewById(R.id.scrollView);
 	                	scrollViewH.scrollBy(scrollX, scrollY);
-	                	Log.v(TAG, "scrollX: " + scrollX + " scrollY: " + scrollY);
+	                	//Log.v(TAG, "scrollX: " + scrollX + " scrollY: " + scrollY);
 	                	
 	                	break;
 	                default:
@@ -524,21 +467,11 @@ public class AcceleroScrollDemo extends Activity {
             			AcceleroScrollService.MSG_RESET_VALUE);
             	mService.send(msg);
             	
-            	/*
-                // Give it some value as an example.
-                Bundle msgBundle = new Bundle();
-                msgBundle.putFloat("value", 2.0f);
-                msg = Message.obtain(null,
-                        AcceleroScrollService.MSG_SET_PREFERENCES_VALUE,
-                        AcceleroScrollService.PREFERENCE_ACCELERATION, 0);
-                msg.setData(msgBundle);
-                mService.send(msg);
-				*/
                 msg = Message.obtain(null,
                         AcceleroScrollService.MSG_REGISTER_CLIENT);
                 msg.replyTo = mMessenger;
                 mService.send(msg);
-                
+                Log.v(TAG, "sending register client");
                 
             } catch (RemoteException e) {
                 // In this case the service has crashed before we could even
