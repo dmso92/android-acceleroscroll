@@ -47,7 +47,7 @@ public class AcceleroScrollService extends Service {
      * Just for emulator should be removed from production
      * 
      */
-    private boolean useEmulator = false;
+    private boolean useEmulator = true;
     private AcceleroSensorManagerInterface sensorManager;
     
 
