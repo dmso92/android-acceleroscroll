@@ -226,11 +226,11 @@ public class AcceleroScrollPreferences extends PreferenceActivity
     }
 
     void doUnbindService() {
-        if (mIsBound) {
+        //if (mIsBound) {
             // Detach our existing connection.
             unbindService(mConnection);
             mIsBound = false;
-        }
+        //}
     }
 	
 }

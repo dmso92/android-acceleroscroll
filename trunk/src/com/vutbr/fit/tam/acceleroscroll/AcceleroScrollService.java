@@ -47,7 +47,7 @@ public class AcceleroScrollService extends Service {
      * Just for emulator should be removed from production
      * 
      */
-    private boolean useEmulator = true;
+    private boolean useEmulator = false;
     private AcceleroSensorManagerInterface sensorManager;
     
 
@@ -147,6 +147,14 @@ public class AcceleroScrollService extends Service {
     class IncomingHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
+        	
+        	/* First, get the Display from the WindowManager */  
+        	Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();  
+        	
+        	/* Now we can retrieve all display-related infos */  
+        	int orientation = display.getRotation();
+        	scrollManager.setOrientation(orientation);
+        	
             switch (msg.what) {
                 case MSG_REGISTER_CLIENT:
                 	addClient(msg.replyTo);
@@ -187,15 +195,9 @@ public class AcceleroScrollService extends Service {
     		Log.w(TAG, "Client trying to reconnect without unregistering first.");
     		return;
     	}
-    	/* First, get the Display from the WindowManager */  
-    	Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();  
-    	  
-    	/* Now we can retrieve all display-related infos */  
-    	int orientation = display.getRotation();
-    	scrollManager.setOrientation(orientation);
     	
         mClients.add(msger);
-        Log.v(TAG, "Client added." + mClients.size());
+        Log.v(TAG, "Client added. " + mClients.size());
     }
     
     private synchronized void startTimer(){
@@ -233,7 +235,7 @@ public class AcceleroScrollService extends Service {
         	sensorManager.stopListening();
         	this.stopTimer();
         }
-        Log.v(TAG, "Client removed." + mClients.size());
+        Log.v(TAG, "Client removed. " + mClients.size());
     }
     
     private synchronized void removeClient(int index){
@@ -246,7 +248,7 @@ public class AcceleroScrollService extends Service {
     }
     
     private void getPreferencesValue(int type, Messenger msger){
-    	Log.v(TAG, "Preference value get request.");
+    	//Log.v(TAG, "Preference value get request.");
     	Bundle data = new Bundle();
     	Message updateMessage = Message.obtain(null, MSG_GET_PREFERENCES_VALUE, 0, 0);
     	switch(type){
@@ -301,7 +303,6 @@ public class AcceleroScrollService extends Service {
     }
     
     private void setPreferencesValue(int type, Bundle data){
-    	Log.v(TAG, "Preference value change request." + data.getFloat("value"));
 
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
@@ -333,6 +334,7 @@ public class AcceleroScrollService extends Service {
     	case PREFERENCE_USE_HAND_BASED:
     		scrollManager.setUseHandBased(data.getBoolean("value"));
     		editor.putBoolean("use_hand_based", scrollManager.isUseHandBased());
+    		break;
     	case PREFERENCE_FPS:
     		this.updateFPS = Math.max(data.getFloat("value"), 2.0f);
             editor.putFloat("fps", this.updateFPS);
@@ -345,6 +347,8 @@ public class AcceleroScrollService extends Service {
     }
     
     private synchronized void sendUpdateMessage(){
+    	
+    	
     	for (int i=mClients.size()-1; i>=0; i--) {
             try {
             	float[] movement = new float[2];

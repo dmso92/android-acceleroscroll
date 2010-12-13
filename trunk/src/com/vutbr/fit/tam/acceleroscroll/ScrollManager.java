@@ -118,6 +118,7 @@ public class ScrollManager implements AcceleroSensorListener {
 	}
 
 	public void setOrientation(int orientation) {
+		Log.v(TAG, "setting orientation: "+orientation);
 		this.orientation = orientation;
 	}
 

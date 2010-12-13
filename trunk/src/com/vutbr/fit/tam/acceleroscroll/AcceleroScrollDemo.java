@@ -87,9 +87,6 @@ public class AcceleroScrollDemo extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN); 
         
         setContentView(R.layout.main);
-        
-        startService(new Intent(this, AcceleroScrollService.class));
-    	doBindService();
     	
     	Display scrollDisplay = getWindowManager().getDefaultDisplay(); 
     	displayWidth = scrollDisplay.getWidth();
@@ -109,21 +106,12 @@ public class AcceleroScrollDemo extends Activity {
     		currentImagePath = imagePreferences.getString("imagePath", "/mnt/sdcard/droid.png");
     		scrollImage = BitmapFactory.decodeFile(currentImagePath);
     	}
-    	
    	
     	ImageView scrollView = (ImageView) findViewById(R.id.scrollView);
+	    scrollView.setOnTouchListener(imageTouchListener);
     	scrollView.setImageBitmap(scrollImage);
-    	
 	    scrollView.scrollBy(currentPosX, currentPosY);
 	    
-	    scrollView.setOnTouchListener(imageTouchListener);
-	    
-	    maxHBScroll = (int)((scrollImage.getHeight()/2) - (displayHeight /2));
-	    maxWRScroll = (int)((scrollImage.getWidth()/2) - (displayWidth /2));
-	    maxHTScroll = maxHBScroll * -1;
-	    maxWLScroll = maxWRScroll * -1;  
-    	//Log.v(TAG, "viewHeight: " + displayHeight + " viewWidth: " + displayWidth + " maxHScroll: " + maxHScroll + " maxWScroll: " + maxWScroll);
-    	
     }
     
     /** Called when the activity is resumed. */
@@ -132,10 +120,12 @@ public class AcceleroScrollDemo extends Activity {
     	super.onResume();
     	if(!mIsBound){
     		startService(new Intent(this, AcceleroScrollService.class));
-    		ImageView scrollView = (ImageView) findViewById(R.id.scrollView);
-        	scrollView.setImageBitmap(scrollImage);
     		doBindService();
     	}
+    	maxHBScroll = (int)((scrollImage.getHeight()/2) - (displayHeight /2));
+	    maxWRScroll = (int)((scrollImage.getWidth()/2) - (displayWidth /2));
+	    maxHTScroll = maxHBScroll * -1;
+	    maxWLScroll = maxWRScroll * -1; 
     }
     
     /** Called when activit paused. */
@@ -201,10 +191,10 @@ public class AcceleroScrollDemo extends Activity {
     	    	
     	    	scrollView.setImageBitmap(defaultImage);
     	    	
-    	    	maxHTScroll = (int)((defaultImage.getHeight()/2) - (displayHeight /2));
-    	    	maxWRScroll = (int)((defaultImage.getWidth()/2) - (displayWidth /2));
-    	    	maxHBScroll = maxHTScroll * -1;
-    	    	maxWLScroll = maxWRScroll * -1;
+    	    	maxHBScroll = (int)((scrollImage.getHeight()/2) - (displayHeight /2));
+    		    maxWRScroll = (int)((scrollImage.getWidth()/2) - (displayWidth /2));
+    		    maxHTScroll = maxHBScroll * -1;
+    		    maxWLScroll = maxWRScroll * -1;
     	    	
     	    	scrollImage = defaultImage;
     	    	isDefaultImage = true;
@@ -506,7 +496,7 @@ public class AcceleroScrollDemo extends Activity {
     }
 
     void doUnbindService() {
-        if (mIsBound) {
+        //if (mIsBound) {
             // If we have received the service, and hence registered with
             // it, then now is the time to unregister.
             if (mService != null) {
@@ -524,7 +514,7 @@ public class AcceleroScrollDemo extends Activity {
             // Detach our existing connection.
             unbindService(mConnection);
             mIsBound = false;
-        }
+        //}
     }
     
 }
