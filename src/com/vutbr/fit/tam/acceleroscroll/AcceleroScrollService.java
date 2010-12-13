@@ -111,17 +111,13 @@ public class AcceleroScrollService extends Service {
     static final int PREFERENCE_FPS = 5;
     /**
      * Set if orientation sensor should be used.
-     * Default is phone based method
+     * Default is manual counting
      */
     static final int PREFERENCE_USE_HAND_BASED = 6;
     /**
-     * wall_bounce
+     * wall_bounceness. [0..1.0]  1.0 - ideal bounce from wall
      */
     static final int PREFERENCE_WALL_BOUNCE = 7;
-    
-    /**
-     * Set
-     */
     
     /**
      * send all preferences at once to preference activity, the 
@@ -132,6 +128,9 @@ public class AcceleroScrollService extends Service {
 
     /**
      * Message to clients with the updated values.
+     * "updateSpeed" and "updateMovement" are specified in the bundle
+     * Both are 2D vectors.
+     * The movement is in display coordinate system given in milimeters
      */
     static final int MSG_UPDATE_VALUES = 6;
     
@@ -244,7 +243,7 @@ public class AcceleroScrollService extends Service {
     		sensorManager.stopListening();
     		this.stopTimer();
     	}
-        Log.v(TAG, "Client removed." + mClients.size());
+        Log.v(TAG, "Client removed. " + mClients.size());
     }
     
     private void getPreferencesValue(int type, Messenger msger){

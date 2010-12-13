@@ -44,7 +44,6 @@ public class AcceleroScrollPreferences extends PreferenceActivity
         seek.setOnPreferenceChangeListener(this);
         seek = (SeekBarPreference) this.findPreference("edge_soft");
         seek.setOnPreferenceChangeListener(this);
-        Log.v(TAG, "Setting change listeners");
         
         CheckBoxPreference use_orient = (CheckBoxPreference) this.findPreference("use_orientation");
         use_orient.setOnPreferenceChangeListener(this);
@@ -73,19 +72,33 @@ public class AcceleroScrollPreferences extends PreferenceActivity
 		return true;
 	}
 	
+	/**
+	 * Send a boolean value to the server
+	 * @param type type of the preference
+	 * @param newValue 
+	 */
 	private void sendBoolean(int type, Object newValue){
 		Bundle msgBundle = new Bundle();
 		msgBundle.putBoolean("value", (Boolean) newValue);
 		sendValue(type, msgBundle);
 	}
 	
+	/**
+	 * Send a float to the server
+	 * @param type type of the preference
+	 * @param newValue
+	 */
 	private void sendFloat(int type, Object newValue){
 		Bundle msgBundle = new Bundle();
 		msgBundle.putFloat("value", (Float) newValue);
 		sendValue(type, msgBundle);
 	}
 	
-	//send the new value to the service
+	/**
+	 * send the new value to the service
+	 * @param type of the preference
+	 * @param data bundle containing the new values
+	 */
 	private void sendValue(int type, Bundle data){
 		Log.v(TAG, "Sending changed value to service");
 		if(mIsBound){

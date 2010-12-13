@@ -15,7 +15,7 @@ public class ScrollManager implements AcceleroSensorListener {
 	private float threshold = 0.1f;
 	private float minSpeed = 30.0f;
 	private float maxSpeed = 100.0f;
-	private float acceleration = 2.0f;
+	private float acceleration = 6.0f;
 	private float springness = 3.0f;
 	private float wall_bounce = 0.5f;
 	
@@ -118,7 +118,6 @@ public class ScrollManager implements AcceleroSensorListener {
 	}
 
 	public void setOrientation(int orientation) {
-		Log.v(TAG, "setting orientation: "+orientation);
 		this.orientation = orientation;
 	}
 
@@ -201,7 +200,6 @@ public class ScrollManager implements AcceleroSensorListener {
 
 	public void setUseHandBased(boolean useHandBased) {
 		this.useHandBased = useHandBased;
-		Log.v(TAG, "using orientation sensors"+(!useHandBased));
 		this.resetState();
 	}
 
@@ -209,7 +207,6 @@ public class ScrollManager implements AcceleroSensorListener {
 		
 		//first fill the history before giving any data away
 		if(onStart){
-			Log.v(TAG, x+" "+y+" "+z+" onstart");
 			synchronized (this) {
 				accelerationHistory[historyIndex*3] = x;
 				accelerationHistory[historyIndex*3+1] = y;
@@ -218,7 +215,6 @@ public class ScrollManager implements AcceleroSensorListener {
 				if(historyIndex == HISTORY_SIZE) {
 					historyIndex = 0;
 					onStart = false;
-					Log.v(TAG, "reset called from onstart");
 					this.resetState();
 				}
 			}
@@ -309,7 +305,6 @@ public class ScrollManager implements AcceleroSensorListener {
 				(float) Math.sqrt(avgValues[2]*avgValues[2]+avgValues[0]*avgValues[0]));
 		rotationAngles[1] = this.getAngle(avgValues[0], 
 				(float) Math.sqrt(avgValues[2]*avgValues[2]+avgValues[1]*avgValues[1]));
-		Log.v(TAG, "phoneGetAngles: "+rotationAngles[0]+" "+rotationAngles[1]);
 	}
 		
 		
@@ -340,6 +335,10 @@ public class ScrollManager implements AcceleroSensorListener {
 		magSensorValues[2] = field3;
 	}
 	
+	/**
+	 * Get the new speed after hitting a wall
+	 * @param wall the wall that was hit top - 0, 1, 2, 3 - left, clockwise
+	 */
 	public void hitWall(int wall){
 		switch(orientation){
 		//device counterclockwise rotation
