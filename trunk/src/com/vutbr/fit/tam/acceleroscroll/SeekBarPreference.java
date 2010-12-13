@@ -53,7 +53,6 @@ public class SeekBarPreference extends DialogPreference implements
 		
 		if (shouldPersist()){
 		      mValue = getPersistedFloat(mDefault);
-		      Log.v(TAG, "persisted");
 		}
 
 		currVal = (TextView) layout.findViewById(R.id.currText);

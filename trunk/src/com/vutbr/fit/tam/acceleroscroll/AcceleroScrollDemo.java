@@ -461,7 +461,6 @@ public class AcceleroScrollDemo extends Activity {
                         AcceleroScrollService.MSG_REGISTER_CLIENT);
                 msg.replyTo = mMessenger;
                 mService.send(msg);
-                Log.v(TAG, "sending register client");
                 
             } catch (RemoteException e) {
                 // In this case the service has crashed before we could even
